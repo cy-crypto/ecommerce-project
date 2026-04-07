@@ -2,217 +2,224 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const User = require('../models/User');
+const { requireAuth } = require('../middleware/auth');
+
+function extractFlavourHighlights(products) {
+  const seen = new Set();
+  const highlights = [];
+
+  for (const product of products) {
+    for (const flavour of product.flavourOptions || []) {
+      const key = String(flavour.name || '').trim().toLowerCase();
+      if (!key || seen.has(key)) {
+        continue;
+      }
+
+      seen.add(key);
+      highlights.push({
+        name: flavour.name,
+        note: flavour.note || 'Signature scoop profile',
+        color: flavour.color || '#ffe5c2'
+      });
+
+      if (highlights.length >= 10) {
+        return highlights;
+      }
+    }
+  }
+
+  return highlights;
+}
+
+async function buildCartSummary(sessionCart) {
+  const cart = Array.isArray(sessionCart) ? sessionCart : [];
+  const cartItems = [];
+  let subtotal = 0;
+
+  for (const item of cart) {
+    const product = await Product.findById(item.productId).lean();
+    if (!product || !product.isActive) {
+      continue;
+    }
+
+    const quantity = Number(item.quantity) || 1;
+    const itemTotal = product.price * quantity;
+    subtotal += itemTotal;
+    cartItems.push({
+      product,
+      quantity,
+      itemTotal,
+      selectedFlavours: Array.isArray(item.selectedFlavours) ? item.selectedFlavours : [],
+      scoopCount: Number(item.scoopCount) || 0
+    });
+  }
+
+  const tax = subtotal * 0.08;
+  const shipping = subtotal > 0 ? 5.99 : 0;
+  return {
+    cartItems,
+    subtotal,
+    tax,
+    shipping,
+    total: subtotal + tax + shipping
+  };
+}
 
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find().limit(6).sort({ createdAt: -1 });
+    const featuredProducts = await Product.find({ isActive: true }).sort({ createdAt: -1 }).limit(8).lean();
+    const highlights = extractFlavourHighlights(featuredProducts);
+    const signatureStack = highlights.slice(0, 3).map((item) => item.name).join(' + ');
+
     res.render('home', {
-      title: 'Play Cards - Gaming Card Store',
-      products,
+      title: 'ScoopCraft Pints | Custom Ice Cream Shop',
+      flavours: highlights,
+      featuredProducts,
+      totalFlavours: highlights.length,
+      totalProducts: featuredProducts.length,
+      signatureStack
     });
   } catch (error) {
-    console.error('Error loading products:', error);
+    console.error('Error loading home:', error);
     res.status(500).render('404', {
-      title: 'Error | Play Cards',
+      title: 'Error | ScoopCraft'
     });
   }
 });
 
 router.get('/products', async (req, res) => {
   try {
-    // Get query parameters
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const category = req.query.category || '';
-    const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
-    const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
-    const rarity = req.query.rarity || '';
-    const sortBy = req.query.sortBy || 'createdAt';
-    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+    const q = (req.query.q || '').trim();
+    const query = { isActive: true };
 
-    // Build filter object
-    const filter = {};
-    
-    if (category) {
-      filter.category = category;
-    }
-    
-    if (rarity) {
-      filter.rarity = rarity;
-    }
-    
-    if (minPrice !== null || maxPrice !== null) {
-      filter.price = {};
-      if (minPrice !== null) {
-        filter.price.$gte = minPrice;
-      }
-      if (maxPrice !== null) {
-        filter.price.$lte = maxPrice;
-      }
+    if (q) {
+      query.$or = [
+        { name: new RegExp(q, 'i') },
+        { description: new RegExp(q, 'i') },
+        { 'flavourOptions.name': new RegExp(q, 'i') }
+      ];
     }
 
-    // Calculate pagination
-    const skip = (page - 1) * limit;
-    
-    // Get total count for pagination
-    const totalProducts = await Product.countDocuments(filter);
-    const totalPages = Math.ceil(totalProducts / limit);
-
-    // Build sort object
-    const sort = {};
-    sort[sortBy] = sortOrder;
-
-    // Fetch products with filters, pagination, and sorting
-    const products = await Product.find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit);
-
-    // Get unique categories and rarities for filter dropdowns
-    const categories = await Product.distinct('category');
-    const rarities = await Product.distinct('rarity');
+    const products = await Product.find(query).sort({ createdAt: -1 }).lean();
 
     res.render('products', {
-      title: 'All Cards | Play Cards',
+      title: 'Browse Custom Pints | ScoopCraft',
       products,
-      currentPage: page,
-      totalPages,
-      totalProducts,
-      limit,
-      category,
-      rarity,
-      minPrice: minPrice || '',
-      maxPrice: maxPrice || '',
-      sortBy,
-      sortOrder: sortOrder === 1 ? 'asc' : 'desc',
-      categories: categories.filter(c => c), // Filter out null/undefined
-      rarities: rarities.filter(r => r), // Filter out null/undefined
-      hasFilters: !!(category || rarity || minPrice !== null || maxPrice !== null)
+      q
     });
   } catch (error) {
     console.error('Error loading products:', error);
     res.status(500).render('404', {
-      title: 'Error | Play Cards',
-    });
-  }
-});
-
-// Customer Order History - placed before dynamic routes
-router.get('/my-orders', (req, res) => {
-  const email = req.query.email || '';
-  res.render('my-orders', {
-    title: 'My Orders | Play Cards',
-    email,
-    orders: []
-  });
-});
-
-router.post('/my-orders', async (req, res) => {
-  try {
-    const { email } = req.body;
-    
-    if (!email || !email.trim()) {
-      return res.render('my-orders', {
-        title: 'My Orders | Play Cards',
-        email: '',
-        orders: [],
-        error: 'Please enter an email address'
-      });
-    }
-
-    const orders = await Order.find({ 'customer.email': email.trim() })
-      .sort({ createdAt: -1 });
-
-    res.render('my-orders', {
-      title: 'My Orders | Play Cards',
-      email: email.trim(),
-      orders
-    });
-  } catch (error) {
-    console.error('Error loading orders:', error);
-    res.status(500).render('404', {
-      title: 'Error | Play Cards'
+      title: 'Error | ScoopCraft'
     });
   }
 });
 
 router.get('/products/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).lean();
+    if (!product || !product.isActive) {
+      return res.status(404).render('404', {
+        title: 'Product Not Found | ScoopCraft'
+      });
+    }
 
-    if (!product) {
-      return res.status(404).render('404', { title: 'Card Not Found | Play Cards' });
+    const relatedProducts = await Product.find({
+      _id: { $ne: product._id },
+      isActive: true,
+      category: product.category
+    })
+      .limit(4)
+      .lean();
+
+    let isWishlisted = false;
+    if (req.session.userId) {
+      const user = await User.findById(req.session.userId).select('wishlist').lean();
+      isWishlisted = (user?.wishlist || []).some(
+        item => item.product && item.product.toString() === String(product._id)
+      );
+    }
+
+    if (product.seoTitle || product.seoDescription || product.seoKeywords || product.metaRobots || product.canonicalUrl) {
+      res.locals.seo = {
+        ...res.locals.seo,
+        metaDescription: product.seoDescription || res.locals.seo.metaDescription,
+        metaKeywords: product.seoKeywords || res.locals.seo.metaKeywords,
+        robots: product.metaRobots || res.locals.seo.robots,
+        currentUrl: product.canonicalUrl || res.locals.seo.currentUrl
+      };
     }
 
     res.render('product-detail', {
-      title: `${product.name} | Play Cards`,
+      title: product.seoTitle || `${product.name} | ScoopCraft`,
       product,
+      relatedProducts,
+      isWishlisted
     });
   } catch (error) {
-    console.error('Error loading product:', error);
-    res.status(404).render('404', { title: 'Card Not Found | Play Cards' });
+    console.error('Error loading product detail:', error);
+    res.status(500).render('404', {
+      title: 'Error | ScoopCraft'
+    });
   }
 });
 
-router.get('/checkout', async (req, res) => {
+router.get('/checkout', requireAuth, async (req, res) => {
   try {
-    const cart = req.session.cart || [];
-    const cartItems = [];
-    let total = 0;
-
-    for (const item of cart) {
-      const product = await Product.findById(item.productId);
-      if (product) {
-        const itemTotal = product.price * item.quantity;
-        total += itemTotal;
-        cartItems.push({
-          product,
-          quantity: item.quantity,
-          itemTotal
-        });
-      }
-    }
-
-    if (cartItems.length === 0) {
+    const summary = await buildCartSummary(req.session.cart);
+    if (!summary.cartItems.length) {
       return res.redirect('/cart');
     }
 
-    const subtotal = total;
-    const tax = total * 0.08;
-    const shipping = total > 0 ? 5.99 : 0;
-    const grandTotal = subtotal + tax + shipping;
-
+    const user = await User.findById(req.session.userId).lean();
     res.render('checkout', {
-      title: 'Checkout | Play Cards',
-      cartItems,
-      subtotal,
-      tax,
-      shipping,
-      total: grandTotal
+      title: 'Checkout | ScoopCraft',
+      cartItems: summary.cartItems,
+      subtotal: summary.subtotal,
+      tax: summary.tax,
+      shipping: summary.shipping,
+      total: summary.total,
+      profile: {
+        name: user?.name || req.session.currentUser?.name || '',
+        email: user?.email || req.session.currentUser?.email || '',
+        phone: user?.phone || '',
+        address: user?.address || ''
+      }
     });
   } catch (error) {
     console.error('Error loading checkout:', error);
     res.status(500).render('404', {
-      title: 'Error | Play Cards',
+      title: 'Error | ScoopCraft'
+    });
+  }
+});
+
+router.get('/my-orders', requireAuth, async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.session.userId }).sort({ createdAt: -1 }).lean();
+    res.render('my-orders', {
+      title: 'My Orders | ScoopCraft',
+      orders,
+      email: req.session.currentUser?.email || ''
+    });
+  } catch (error) {
+    console.error('Error loading orders:', error);
+    res.status(500).render('404', {
+      title: 'Error | ScoopCraft'
     });
   }
 });
 
 router.get('/about', (req, res) => {
   res.render('about', {
-    title: 'About | Play Cards',
+    title: 'About Us | ScoopCraft'
   });
 });
 
 router.get('/contact', (req, res) => {
   res.render('contact', {
-    title: 'Contact | Play Cards',
-  });
-});
-
-router.get('/thankyou', (req, res) => {
-  res.render('thankyou', {
-    title: 'Thank You | Play Cards',
+    title: 'Contact Us | ScoopCraft'
   });
 });
 

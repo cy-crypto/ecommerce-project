@@ -1,89 +1,34 @@
 <%- include('partials/header') %>
 
-<section class="cart-section">
-  <div class="container">
-    <h1 class="cart-page-title">My Orders</h1>
-    
-    <div class="order-search-form" style="max-width: 600px; margin: 30px auto; padding: 20px; background: #f9f9f9; border-radius: 8px;">
-      <form method="POST" action="/my-orders">
-        <div style="margin-bottom: 15px;">
-          <label for="email" style="display: block; margin-bottom: 5px; font-weight: bold;">Enter your email address:</label>
-          <input 
-            type="email" 
-            id="email" 
-            name="email" 
-            value="<%= email %>"
-            placeholder="your@email.com" 
-            required 
-            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;"
-          />
-        </div>
-        <button type="submit" class="btn-primary" style="width: 100%;">Search Orders</button>
-      </form>
-    </div>
+<section>
+  <h1>My Orders</h1>
+  <p>Signed in as <strong><%= email %></strong></p>
 
-    <% if (typeof error !== 'undefined' && error) { %>
-      <div style="max-width: 600px; margin: 20px auto; padding: 15px; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c33;">
-        <%= error %>
-      </div>
-    <% } %>
-
-    <% if (orders && orders.length > 0) { %>
-      <div class="orders-list" style="max-width: 900px; margin: 30px auto;">
-        <h2 style="margin-bottom: 20px;">Your Orders (<%= orders.length %>)</h2>
-        
-        <% orders.forEach(function(order) { %>
-          <div class="order-card" style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; flex-wrap: wrap;">
-              <div>
-                <h3 style="margin: 0 0 10px 0; color: #333;">Order #<%= order._id %></h3>
-                <p style="margin: 5px 0; color: #666;">
-                  <strong>Date:</strong> <%= order.createdAt.toLocaleString() %>
-                </p>
-                <p style="margin: 5px 0; color: #666;">
-                  <strong>Status:</strong> 
-                  <span style="padding: 4px 12px; border-radius: 4px; font-weight: bold; 
-                    <% if (order.status === 'Placed') { %>background: #fff3cd; color: #856404;<% } %>
-                    <% if (order.status === 'Processing') { %>background: #cfe2ff; color: #084298;<% } %>
-                    <% if (order.status === 'Delivered') { %>background: #d1e7dd; color: #0f5132;<% } %>
-                  ">
-                    <%= order.status %>
-                  </span>
-                </p>
-              </div>
-              <div style="text-align: right;">
-                <p style="margin: 0; font-size: 24px; font-weight: bold; color: #333;">
-                  $<%= order.total.toFixed(2) %>
-                </p>
-              </div>
-            </div>
-
-            <div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px;">
-              <h4 style="margin: 0 0 10px 0;">Items:</h4>
-              <ul style="list-style: none; padding: 0; margin: 0;">
-                <% order.items.forEach(function(item) { %>
-                  <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
-                    <strong><%= item.name %></strong> × <%= item.quantity %> - $<%= item.lineTotal.toFixed(2) %>
-                  </li>
-                <% }); %>
-              </ul>
-            </div>
-
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-              <p style="margin: 5px 0; color: #666;">
-                <strong>Customer:</strong> <%= order.customer.name %> (<%= order.customer.email %>)
-              </p>
-            </div>
-          </div>
-        <% }); %>
-      </div>
-    <% } else if (email && email.trim()) { %>
-      <div style="max-width: 600px; margin: 30px auto; padding: 30px; text-align: center; background: #f9f9f9; border-radius: 8px;">
-        <h2>No orders found</h2>
-        <p style="color: #666;">No orders were found for the email address: <strong><%= email %></strong></p>
-      </div>
-    <% } %>
-  </div>
+  <% if (!orders || orders.length === 0) { %>
+    <p>No orders found yet.</p>
+    <a href="/products" class="btn-primary">Shop Now</a>
+  <% } else { %>
+    <% orders.forEach(order => { %>
+      <article class="order-card">
+        <h3>Order #<%= order._id %></h3>
+        <p>Status: <strong><%= order.status %></strong></p>
+        <p>Plan: <strong><%= order.plan === 'subscription' ? 'Weekly Subscription' : 'One-Time Order' %></strong></p>
+        <p>Total: $<%= order.total.toFixed(2) %></p>
+        <p>Placed: <%= new Date(order.createdAt).toLocaleString() %></p>
+        <details>
+          <summary>Items</summary>
+          <ul>
+            <% order.items.forEach(item => { %>
+              <li><%= item.name %> x <%= item.quantity %> - $<%= item.lineTotal.toFixed(2) %></li>
+              <% if (item.selectedFlavours && item.selectedFlavours.length) { %>
+                <li class="muted">Custom: <%= item.scoopCount %>-flavour mix - <%= item.selectedFlavours.join(', ') %></li>
+              <% } %>
+            <% }) %>
+          </ul>
+        </details>
+      </article>
+    <% }) %>
+  <% } %>
 </section>
 
 <%- include('partials/footer') %>

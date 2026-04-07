@@ -1,32 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= title %></title>
-    <link rel="stylesheet" href="/css/styles.css" />
-    <link rel="stylesheet" href="/css/admin.css" />
-  </head>
-  <body class="admin-body">
-    <header class="admin-header">
-      <div class="container">
-        <div class="admin-logo-area">
-          <a href="/admin" class="admin-logo-link">
-            <img src="/assets/play.png" alt="Play Cards Logo" class="admin-logo" />
-            <span class="admin-title">Admin Panel</span>
-          </a>
-        </div>
-
-        <nav class="admin-nav">
-          <ul class="admin-nav-list">
-            <li class="admin-nav-item"><a href="/admin">Dashboard</a></li>
-            <li class="admin-nav-item"><a href="/admin/products">Products</a></li>
-            <li class="admin-nav-item"><a href="/admin/orders">Orders</a></li>
-            <li class="admin-nav-item"><a href="/">View Site</a></li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-
-    <main class="admin-main">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+  <header class="admin-header">
+    <div class="admin-container">
+      <a href="/admin" class="admin-brand">ScoopCraft Admin</a>
+      <nav class="admin-nav">
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/products">Products</a>
+        <a href="/admin/orders">Orders</a>
+        <a href="/admin/users">Users</a>
+        <a href="/admin/seo">SEO</a>
+      </nav>
+      <form action="/admin/signout" method="POST">
+        <button type="submit" class="admin-btn">Sign Out</button>
+      </form>
+    </div>
+  </header>
+  <main class="admin-container admin-page">
 

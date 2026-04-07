@@ -2,19 +2,23 @@
 
 <section class="thankyou-section">
   <div class="container">
-    <div class="thankyou-card">
-      <div class="thankyou-icon">✓</div>
-      <h1>Thank You for Your Order!</h1>
-      <p class="thankyou-message">
-        Your order has been successfully placed. We'll send you a confirmation email shortly.
-      </p>
-      <div class="thankyou-actions">
-        <a href="/products" class="btn-primary">Continue Shopping</a>
-        <a href="/" class="btn-secondary">Back to Home</a>
+    <div class="builder-card thankyou-card">
+      <h1>Order Confirmed</h1>
+      <p>Thanks <strong><%= order.name %></strong>. Your custom pint request is now in our scoop queue.</p>
+      <p><strong>Plan:</strong> <%= order.plan === 'subscription' ? 'Weekly Subscription' : 'One-Time Order' %></p>
+      <p><strong>Pint Type:</strong> <%= order.tier %>-Flavour <%= order.tier === 4 ? 'Deluxe' : 'Classic' %></p>
+      <div class="flavour-chip-wrap">
+        <% order.selectedFlavours.forEach(flavour => { %>
+          <span class="flavour-chip"><%= flavour %></span>
+        <% }) %>
+      </div>
+      <p>Receipt sent to: <strong><%= order.email || 'No email provided' %></strong></p>
+      <div class="hero-actions">
+        <a href="/products" class="btn-primary">Build Another Pint</a>
+        <a href="/" class="btn-outline">Back to Home</a>
       </div>
     </div>
   </div>
 </section>
 
 <%- include('partials/footer') %>
-

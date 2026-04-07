@@ -1,228 +1,70 @@
 <%- include('partials/header') %>
 
-<section class="page-header">
+<section class="builder-hero">
   <div class="container">
-    <h1 class="page-title">All Gaming Cards</h1>
-    <p class="page-subtitle">
-      Browse our full collection of rare, epic, and legendary cards. Mix different archetypes to create a deck
-      that fits your playstyle, from aggressive rush decks to slow control builds.
-    </p>
+    <h1>Shop and Customize Your Pint</h1>
+    <p>Browse our catalog, filter flavours, and configure each pint before adding to cart.</p>
   </div>
 </section>
 
-<section class="products-section">
+<section class="builder-section">
   <div class="container">
-    <!-- Filters Sidebar -->
-    <div class="products-layout">
-      <aside class="filters-sidebar">
-        <div class="filters-card">
-          <h2>Filters</h2>
-          
-          <form method="GET" action="/products" id="filterForm" class="filters-form">
-            <!-- Preserve existing filters when changing page -->
-            <input type="hidden" name="page" value="1" id="pageInput">
-            
-            <!-- Category Filter -->
-            <div class="filter-group">
-              <label for="category">Category</label>
-              <select id="category" name="category" class="filter-select">
-                <option value="">All Categories</option>
-                <% categories.forEach(function(cat) { %>
-                  <option value="<%= cat %>" <%= category === cat ? 'selected' : '' %>><%= cat %></option>
-                <% }); %>
-              </select>
-            </div>
+    <form method="GET" action="/products" class="filter-form">
+      <label>Search
+        <input type="text" name="q" value="<%= q || '' %>" placeholder="Search pints or flavours" />
+      </label>
+      <button type="submit" class="btn-primary">Apply Filters</button>
+      <a href="/products" class="btn-outline">Reset</a>
+    </form>
 
-            <!-- Rarity Filter -->
-            <div class="filter-group">
-              <label for="rarity">Rarity</label>
-              <select id="rarity" name="rarity" class="filter-select">
-                <option value="">All Rarities</option>
-                <% rarities.forEach(function(rar) { %>
-                  <option value="<%= rar %>" <%= rarity === rar ? 'selected' : '' %>><%= rar %></option>
-                <% }); %>
-              </select>
-            </div>
-
-            <!-- Price Range Filter -->
-            <div class="filter-group">
-              <label for="minPrice">Price Range ($)</label>
-              <div class="price-range">
-                <input 
-                  type="number" 
-                  id="minPrice" 
-                  name="minPrice" 
-                  placeholder="Min" 
-                  class="price-input"
-                  value="<%= minPrice %>"
-                  min="0"
-                  step="0.01"
-                />
-                <span>to</span>
-                <input 
-                  type="number" 
-                  id="maxPrice" 
-                  name="maxPrice" 
-                  placeholder="Max" 
-                  class="price-input"
-                  value="<%= maxPrice %>"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-            </div>
-
-            <!-- Sort Options -->
-            <div class="filter-group">
-              <label for="sortBy">Sort By</label>
-              <select id="sortBy" name="sortBy" class="filter-select">
-                <option value="createdAt" data-order="desc" <%= sortBy === 'createdAt' ? 'selected' : '' %>>Newest First</option>
-                <option value="price" data-order="asc" <%= sortBy === 'price' && sortOrder === 'asc' ? 'selected' : '' %>>Price: Low to High</option>
-                <option value="price" data-order="desc" <%= sortBy === 'price' && sortOrder === 'desc' ? 'selected' : '' %>>Price: High to Low</option>
-                <option value="name" data-order="asc" <%= sortBy === 'name' ? 'selected' : '' %>>Name: A to Z</option>
-              </select>
-              <input type="hidden" name="sortOrder" id="sortOrder" value="<%= sortOrder %>">
-            </div>
-
-            <!-- Filter Buttons -->
-            <div class="filter-actions">
-              <button type="submit" class="btn-filter-apply">Apply Filters</button>
-              <% if (hasFilters) { %>
-                <a href="/products" class="btn-filter-clear">Clear All</a>
+    <div class="products-grid spacious">
+      <% if (products && products.length) { %>
+        <% products.forEach(product => { %>
+          <article class="product-card">
+            <img src="<%= product.image %>" alt="<%= product.name %>" class="product-image" />
+            <h3><%= product.name %></h3>
+            <p><%= product.shortDescription || product.description %></p>
+            <p><strong>$<%= Number(product.price || 0).toFixed(2) %></strong></p>
+            <div class="wishlist-card-actions">
+              <a href="/products/<%= product._id %>" class="btn-primary">Customize and Buy</a>
+              <% if (currentUser) { %>
+                <form method="POST" action="/wishlist/add/<%= product._id %>" class="inline-form wishlist-card-form" data-product-id="<%= product._id %>">
+                  <button type="submit" class="wishlist-card-btn">Add to Wishlist</button>
+                </form>
               <% } %>
             </div>
-          </form>
-        </div>
-      </aside>
+          </article>
+        <% }) %>
+      <% } else { %>
+        <article class="builder-card">
+          <h3>No pints found</h3>
+          <p>Try another keyword or add products from admin dashboard.</p>
+        </article>
+      <% } %>
+    </div>
 
-      <!-- Products Grid -->
-      <div class="products-main">
-        <!-- Results Info -->
-        <div class="results-header">
-          <div class="results-info">
-            <p>
-              Showing <strong><%= products.length > 0 ? ((currentPage - 1) * limit + 1) : 0 %></strong> - 
-              <strong><%= (currentPage - 1) * limit + products.length %></strong> of 
-              <strong><%= totalProducts %></strong> products
-            </p>
-          </div>
-        </div>
-
-        <!-- Products Grid -->
-        <% if (products.length > 0) { %>
-          <div class="prizes-container">
-            <% products.forEach(function(product) { %>
-              <div class="prize-card">
-                <div class="prize-image">
-                  <img src="<%= product.image %>" alt="<%= product.name %>" />
-                </div>
-                <div class="prize-content">
-                  <% if (product.category) { %>
-                    <span class="product-category"><%= product.category %></span>
-                  <% } %>
-                  <h3><%= product.name %></h3>
-                  <p><%= product.description %></p>
-                  <p>
-                    <strong>Rarity:</strong>
-                    <span class="badge-rarity"><%= product.rarity %></span>
-                  </p>
-                  <p class="price-tag">$<%= product.price.toFixed(2) %></p>
-                  <a href="/products/<%= product._id %>" class="btn-prize">View Details</a>
-                </div>
-              </div>
-            <% }); %>
-          </div>
-
-          <!-- Pagination -->
-          <% if (totalPages > 1) { %>
-            <% 
-              // Helper function to build query string
-              function buildQuery(pageNum) {
-                const params = [];
-                if (category) params.push('category=' + encodeURIComponent(category));
-                if (rarity) params.push('rarity=' + encodeURIComponent(rarity));
-                if (minPrice) params.push('minPrice=' + encodeURIComponent(minPrice));
-                if (maxPrice) params.push('maxPrice=' + encodeURIComponent(maxPrice));
-                if (sortBy) params.push('sortBy=' + encodeURIComponent(sortBy));
-                if (sortOrder) params.push('sortOrder=' + encodeURIComponent(sortOrder));
-                params.push('page=' + pageNum);
-                return params.length > 0 ? '?' + params.join('&') : '?page=' + pageNum;
-              }
-            %>
-            <div class="pagination">
-              <!-- Previous Button -->
-              <% if (currentPage > 1) { %>
-                <a href="<%= buildQuery(currentPage - 1) %>" class="pagination-btn pagination-prev">← Previous</a>
-              <% } else { %>
-                <span class="pagination-btn pagination-prev disabled">← Previous</span>
-              <% } %>
-
-              <!-- Page Numbers -->
-              <div class="pagination-numbers">
-                <% 
-                  let startPage = Math.max(1, currentPage - 2);
-                  let endPage = Math.min(totalPages, currentPage + 2);
-                  
-                  if (startPage > 1) { %>
-                    <a href="<%= buildQuery(1) %>" class="pagination-number">1</a>
-                    <% if (startPage > 2) { %>
-                      <span class="pagination-dots">...</span>
-                    <% } %>
-                <% } %>
-
-                <% for (let i = startPage; i <= endPage; i++) { %>
-                  <% if (i === currentPage) { %>
-                    <span class="pagination-number pagination-active"><%= i %></span>
-                  <% } else { %>
-                    <a href="<%= buildQuery(i) %>" class="pagination-number"><%= i %></a>
-                  <% } %>
-                <% } %>
-
-                <% if (endPage < totalPages) { %>
-                  <% if (endPage < totalPages - 1) { %>
-                    <span class="pagination-dots">...</span>
-                  <% } %>
-                  <a href="<%= buildQuery(totalPages) %>" class="pagination-number"><%= totalPages %></a>
-                <% } %>
-              </div>
-
-              <!-- Next Button -->
-              <% if (currentPage < totalPages) { %>
-                <a href="<%= buildQuery(currentPage + 1) %>" class="pagination-btn pagination-next">Next →</a>
-              <% } else { %>
-                <span class="pagination-btn pagination-next disabled">Next →</span>
-              <% } %>
-            </div>
-          <% } %>
+    <div class="builder-grid top-gap">
+      <article class="builder-card">
+        <h2>How custom flavour picking works</h2>
+        <p>Select a product, choose 3 or 4 scoop layers, then pick the exact flavours available for that pint.</p>
+        <p>During checkout, choose one-time delivery or a weekly subscription and track your order from your account.</p>
+      </article>
+      <article class="builder-card">
+        <h2>Your Wishlist</h2>
+        <p>Save pints while browsing and review all saved items later from one dedicated page.</p>
+        <% if (currentUser) { %>
+          <a href="/wishlist" class="btn-outline">Go to My Wishlist</a>
         <% } else { %>
-          <div class="no-products">
-            <p>No products found matching your filters.</p>
-            <a href="/products" class="btn-primary">Clear Filters</a>
-          </div>
+          <a href="/auth/signin" class="btn-outline">Sign In to Use Wishlist</a>
         <% } %>
-      </div>
+      </article>
+      <article class="builder-card">
+        <h2>Need bulk orders?</h2>
+        <p>Use our contact page for events, office gifting, and seasonal corporate pint drops.</p>
+        <a href="/contact" class="btn-outline">Contact Team ScoopCraft</a>
+      </article>
     </div>
   </div>
 </section>
-
-<script>
-// Handle sort order change
-document.getElementById('sortBy')?.addEventListener('change', function() {
-  const sortOrderInput = document.getElementById('sortOrder');
-  const selectedOption = this.options[this.selectedIndex];
-  const order = selectedOption.getAttribute('data-order');
-  if (order) {
-    sortOrderInput.value = order;
-  }
-});
-
-// Auto-submit form when filters change (optional - you can remove this if you prefer manual submit)
-// document.querySelectorAll('.filter-select, .price-input').forEach(element => {
-//   element.addEventListener('change', function() {
-//     document.getElementById('pageInput').value = '1'; // Reset to page 1 when filter changes
-//     document.getElementById('filterForm').submit();
-//   });
-// });
-</script>
 
 <%- include('partials/footer') %>

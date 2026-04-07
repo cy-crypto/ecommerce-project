@@ -1,9 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <% 
+      const siteTitle = (seo && seo.siteTitle) ? seo.siteTitle : 'ScoopCraft Pints';
+      const titleSeparator = (seo && seo.titleSeparator) ? seo.titleSeparator : '|';
+      const rawTitle = title || siteTitle;
+      const pageTitle = rawTitle.includes(siteTitle) ? rawTitle : `${rawTitle} ${titleSeparator} ${siteTitle}`;
+      const metaDescription = (seo && seo.metaDescription) ? seo.metaDescription : 'ScoopCraft builds custom 3-flavour and 4-flavour artisan ice cream pints delivered to your doorstep.';
+      const metaKeywords = (seo && seo.metaKeywords) ? seo.metaKeywords : 'custom ice cream pints, artisan flavours, subscription pints, dessert delivery';
+      const robots = (seo && seo.robots) ? seo.robots : 'index, follow';
+      const canonical = (seo && seo.currentUrl) ? seo.currentUrl : '';
+      const ogImage = (seo && seo.ogImageUrl) ? seo.ogImageUrl : '/assets/home_play_prizes.png';
+      const twitterCard = (seo && seo.twitterCard) ? seo.twitterCard : 'summary_large_image';
+    %>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= title %></title>
+    <title><%= pageTitle %></title>
+    <meta name="description" content="<%= metaDescription %>" />
+    <meta name="keywords" content="<%= metaKeywords %>" />
+    <meta name="robots" content="<%= robots %>" />
+    <link rel="canonical" href="<%= canonical %>" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="<%= pageTitle %>" />
+    <meta property="og:description" content="<%= metaDescription %>" />
+    <meta property="og:url" content="<%= canonical %>" />
+    <meta property="og:image" content="<%= ogImage %>" />
+    <meta name="twitter:card" content="<%= twitterCard %>" />
+    <meta name="twitter:title" content="<%= pageTitle %>" />
+    <meta name="twitter:description" content="<%= metaDescription %>" />
+    <meta name="twitter:image" content="<%= ogImage %>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
@@ -11,27 +39,35 @@
       <div class="container">
         <div class="logo-area">
           <a href="/" class="logo-link">
-            <img src="/assets/play.png" alt="Play Cards Logo" class="logo" />
+            <span class="logo-mark">SC</span>
+            <span class="logo-text">ScoopCraft Pints</span>
           </a>
         </div>
-
         <nav class="main-nav">
           <ul class="nav-list">
             <li class="nav-item"><a href="/">Home</a></li>
-            <li class="nav-item"><a href="/products">Cards</a></li>
-            <li class="nav-item"><a href="/cart">Cart</a></li>
-            <li class="nav-item"><a href="/my-orders">My Orders</a></li>
+            <li class="nav-item"><a href="/products">Shop Pints</a></li>
             <li class="nav-item"><a href="/about">About</a></li>
             <li class="nav-item"><a href="/contact">Contact</a></li>
+            <li class="nav-item"><a href="/cart">Cart</a></li>
+            <% if (currentUser) { %>
+              <li class="nav-item"><a href="/wishlist">Wishlist</a></li>
+              <li class="nav-item"><a href="/my-orders">My Orders</a></li>
+            <% } %>
+            <% if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Manager')) { %>
+              <li class="nav-item"><a href="/admin">Dashboard</a></li>
+            <% } %>
           </ul>
         </nav>
-
         <div class="header-actions">
-          <a href="/cart" class="cart-link">
-            <span class="cart-icon">🛒</span>
-            <span class="cart-count"><%= typeof cartCount !== 'undefined' ? cartCount : 0 %></span>
-          </a>
-          <a href="/checkout" class="btn-signup">Checkout</a>
+          <% if (currentUser) { %>
+            <form action="/auth/signout" method="POST" class="inline-form">
+              <button type="submit" class="btn-outline">Sign Out</button>
+            </form>
+          <% } else { %>
+            <a href="/auth/signin" class="btn-outline">Sign In</a>
+            <a href="/auth/signup" class="btn-signup">Create Account</a>
+          <% } %>
         </div>
       </div>
     </header>

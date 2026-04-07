@@ -1,207 +1,102 @@
 <%- include('partials/header') %>
 
-<section class="hero-section">
-  <div class="container">
-    <div class="hero-content">
-      <h1 class="hero-title">Collect Legendary Gaming Cards</h1>
-      <p class="hero-description">
-        Build the ultimate deck with rare, epic, and legendary cards inspired by competitive esports and fantasy worlds.
+<section class="hero-icecream">
+  <div class="container hero-grid">
+    <div>
+      <span class="kicker">Custom Ice Cream Pints</span>
+      <h1>Craft your dream pint with 3 or 4 flavour layers.</h1>
+      <p>
+        From berry-forward scoops to rich caramel ribbons, ScoopCraft lets you mix artisan flavours into one custom pint.
+        Choose one-time delivery or a weekly subscription plan.
       </p>
-      <a href="/products" class="btn-primary">Browse All Cards</a>
-    </div>
-    <div class="hero-image">
-      <img src="/assets/home_play_prizes.png" alt="Gaming Cards Showcase" class="prize-image" />
-    </div>
-  </div>
-</section>
-
-<section class="how-it-works">
-  <div class="container">
-    <h2 class="section-title">How Play Cards Works</h2>
-    <div class="steps-container">
-      <div class="step">
-        <div class="step-number">1</div>
-        <div class="step-content">
-          <h3>Pick Your Deck</h3>
-          <p>Explore dozens of themed card sets crafted for different playstyles.</p>
-        </div>
+      <div class="hero-actions">
+        <a href="/products" class="btn-primary">Build My Pint</a>
+        <a href="/about" class="btn-outline">Our Story</a>
       </div>
-      <div class="step">
-        <div class="step-number">2</div>
-        <div class="step-content">
-          <h3>Add Cards To Cart</h3>
-          <p>Mix, match, and customize your collection with your favorite cards.</p>
-        </div>
+      <div class="hero-metrics">
+        <div><strong>24h</strong><span>Fresh Churned</span></div>
+        <div><strong><%= totalFlavours || 0 %></strong><span>Available Flavours</span></div>
+        <div><strong>2</strong><span>Order Plans</span></div>
       </div>
-      <div class="step">
-        <div class="step-number">3</div>
-        <div class="step-content">
-          <h3>Checkout & Play</h3>
-          <p>Secure checkout and fast delivery so you can start battling instantly.</p>
-        </div>
+    </div>
+    <div class="hero-visual">
+      <div class="pint-card">
+        <h3>Signature Stack</h3>
+        <p><%= signatureStack || 'Add flavour options in dashboard to build your live signature stack.' %></p>
       </div>
     </div>
   </div>
 </section>
 
-<section class="prizes-section">
+<section class="flavour-showcase">
   <div class="container">
-    <h2 class="section-title">Featured Cards</h2>
-    <div class="prizes-container">
-      <% products.forEach(function(product) { %>
-        <div class="prize-card">
-          <div class="prize-image">
-            <img src="<%= product.image %>" alt="<%= product.name %>" />
-          </div>
-          <div class="prize-content">
+    <h2 class="section-title">Featured Flavours</h2>
+    <% if (flavours && flavours.length) { %>
+      <div class="flavour-grid">
+        <% flavours.forEach(flavour => { %>
+          <article class="flavour-card" style="--flavour-accent:<%= flavour.color %>">
+            <h3><%= flavour.name %></h3>
+            <p><%= flavour.note %></p>
+          </article>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <article class="builder-card">
+        <h3>No flavour options published yet</h3>
+        <p>Add flavour options in admin products and they will appear here automatically from live DB.</p>
+      </article>
+    <% } %>
+  </div>
+</section>
+
+<section class="catalog-showcase">
+  <div class="container">
+    <h2 class="section-title">Explore Pint Collection</h2>
+    <p class="page-subtitle">Pick from <%= totalProducts || 0 %> live products and customize each scoop profile before checkout.</p>
+    <div class="products-grid">
+      <% if (featuredProducts && featuredProducts.length) { %>
+        <% featuredProducts.forEach(product => { %>
+          <article class="product-card">
+            <img src="<%= product.image %>" alt="<%= product.name %>" class="product-image" />
             <h3><%= product.name %></h3>
-            <p><%= product.description %></p>
-            <p><strong>Rarity:</strong> <%= product.rarity %></p>
-            <p><strong>Price:</strong> $<%= product.price.toFixed(2) %></p>
-            <a href="/products/<%= product._id %>" class="btn-prize">View Card</a>
-          </div>
-        </div>
-      <% }); %>
+            <p><%= product.shortDescription || product.description %></p>
+            <p><strong>$<%= Number(product.price || 0).toFixed(2) %></strong></p>
+            <a href="/products/<%= product._id %>" class="btn-primary">Customize</a>
+          </article>
+        <% }) %>
+      <% } else { %>
+        <article class="builder-card">
+          <h3>Catalog is warming up</h3>
+          <p>Add products from the admin dashboard and they will show here automatically.</p>
+          <a href="/admin/products" class="btn-primary">Open Dashboard</a>
+        </article>
+      <% } %>
     </div>
   </div>
 </section>
 
-<section class="testimonials-section">
+<section class="build-steps">
   <div class="container">
-    <h2 class="section-title">What Our Players Say</h2>
-
-    <div class="testimonials-container">
-      <div class="testimonials-initial">
-        <!-- First two testimonials visible initially -->
-        <div class="testimonial-card">
-          <div class="testimonial-header">
-            <div class="customer-info">
-              <div class="customer-avatar">
-                <img src="/assets/user-1.jpeg" alt="Sarah Johnson" />
-              </div>
-              <div class="customer-details">
-                <h3 class="customer-name">Sarah Johnson</h3>
-                <div class="star-rating">
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p class="review-text">
-            "Amazing card quality! The Legendary Dragon card shines on my desk and in every match."
-          </p>
-        </div>
-
-        <div class="testimonial-card">
-          <div class="testimonial-header">
-            <div class="customer-info">
-              <div class="customer-avatar">
-                <img src="/assets/user-2.jpeg" alt="Mike Chen" />
-              </div>
-              <div class="customer-details">
-                <h3 class="customer-name">Mike Chen</h3>
-                <div class="star-rating">
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p class="review-text">
-            "I built a full cyber deck using cards from Play Cards. Shipping was fast and everything was well packed."
-          </p>
-        </div>
-
-        <!-- Hidden testimonials that will be shown in slider/grid -->
-        <div class="testimonial-card hidden-card">
-          <div class="testimonial-header">
-            <div class="customer-info">
-              <div class="customer-avatar">
-                <img src="/assets/user-1.jpeg" alt="Emma Davis" />
-              </div>
-              <div class="customer-details">
-                <h3 class="customer-name">Emma Davis</h3>
-                <div class="star-rating">
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p class="review-text">
-            "The artwork on the cards is gorgeous. You can tell a lot of love went into the designs."
-          </p>
-        </div>
-
-        <div class="testimonial-card hidden-card">
-          <div class="testimonial-header">
-            <div class="customer-info">
-              <div class="customer-avatar">
-                <img src="/assets/user-2.jpeg" alt="Alex Rodriguez" />
-              </div>
-              <div class="customer-details">
-                <h3 class="customer-name">Alex Rodriguez</h3>
-                <div class="star-rating">
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p class="review-text">
-            "Our local tournament now uses Play Cards exclusively. The balance and variety are fantastic."
-          </p>
-        </div>
-
-        <div class="testimonial-card hidden-card">
-          <div class="testimonial-header">
-            <div class="customer-info">
-              <div class="customer-avatar">
-                <img src="/assets/user-1.jpeg" alt="Lisa Wang" />
-              </div>
-              <div class="customer-details">
-                <h3 class="customer-name">Lisa Wang</h3>
-                <div class="star-rating">
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                  <span class="star">★</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p class="review-text">
-            "I ordered a collector’s bundle and every single card felt premium. Definitely coming back for more."
-          </p>
-        </div>
+    <h2 class="section-title">How It Works</h2>
+    <div class="steps-wrap">
+      <div class="step-item">
+        <span>1</span>
+        <h3>Choose Your Pint Type</h3>
+        <p>Select a 3-flavour classic or 4-flavour deluxe custom pint.</p>
       </div>
-
-      <!-- Slider controls (hidden initially) -->
-      <div class="slider-controls hidden">
-        <button class="slider-btn prev-btn" aria-label="Previous testimonial">
-          <span>‹</span>
-        </button>
-        <button class="slider-btn next-btn" aria-label="Next testimonial">
-          <span>›</span>
-        </button>
+      <div class="step-item">
+        <span>2</span>
+        <h3>Pick Flavours</h3>
+        <p>Mix bold and creamy flavours to create your own layered scoop profile.</p>
+      </div>
+      <div class="step-item">
+        <span>3</span>
+        <h3>Choose Plan</h3>
+        <p>Order once for a treat or subscribe for regular pint deliveries.</p>
       </div>
     </div>
-
-    <div class="view-more-container">
-      <button class="btn-view-more-slider">View More Testimonials (Slider)</button>
-      <button class="btn-view-more-grid">View More Testimonials (Grid)</button>
+    <div class="center-cta">
+      <a href="/products" class="btn-primary">Start Building Your Pint</a>
     </div>
   </div>
 </section>

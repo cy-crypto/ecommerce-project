@@ -1,12 +1,9 @@
 <%- include('partials/header') %>
 
-  <div class="admin-container">
-    <div class="admin-error">
-      <h1>Error</h1>
-      <p><%= message %></p>
-      <a href="/admin" class="btn-admin-primary">Back to Dashboard</a>
-    </div>
-  </div>
+<section>
+  <h1>Admin Error</h1>
+  <p><%= message || 'Something went wrong.' %></p>
+  <a href="/admin" class="admin-btn">Back to Dashboard</a>
+</section>
 
 <%- include('partials/footer') %>
-

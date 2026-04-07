@@ -1,11 +1,12 @@
 const express = require('express');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const User = require('../models/User');
 const applyDiscount = require('../middleware/applyDiscount');
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Helper middleware to build order context from current cart + form data
 async function buildOrderContext(req, res, next) {
   try {
     const cart = req.session.cart || [];
@@ -20,7 +21,9 @@ async function buildOrderContext(req, res, next) {
         cartItems.push({
           product,
           quantity: item.quantity,
-          lineTotal
+          lineTotal,
+          selectedFlavours: Array.isArray(item.selectedFlavours) ? item.selectedFlavours : [],
+          scoopCount: Number(item.scoopCount) || 0
         });
       }
     }
@@ -31,7 +34,6 @@ async function buildOrderContext(req, res, next) {
 
     const tax = subtotal * 0.08;
     const shipping = subtotal > 0 ? 5.99 : 0;
-    const baseTotal = subtotal + tax + shipping;
 
     req.order = {
       cartItems,
@@ -40,46 +42,49 @@ async function buildOrderContext(req, res, next) {
         email: req.body.email,
         phone: req.body.phone,
         address: req.body.address
-      }
+      },
+      plan: req.body.plan === 'subscription' ? 'subscription' : 'one-time'
     };
 
     req.orderTotals = {
       subtotal,
       tax,
       shipping,
-      baseTotal
+      baseTotal: subtotal + tax + shipping
     };
 
     next();
   } catch (error) {
     console.error('Error building order context:', error);
     res.status(500).render('404', {
-      title: 'Error | Play Cards'
+      title: 'Error | ScoopCraft'
     });
   }
 }
 
-// Order preview
-router.post('/preview', buildOrderContext, applyDiscount, (req, res) => {
-  // Persist pending order data in session for confirmation step
+router.post('/preview', requireAuth, buildOrderContext, applyDiscount, (req, res) => {
   req.session.pendingOrder = {
     customer: req.order.customer,
+    plan: req.order.plan,
     cartItems: req.order.cartItems.map(item => ({
       productId: item.product._id.toString(),
       name: item.product.name,
       price: item.product.price,
       quantity: item.quantity,
       lineTotal: item.lineTotal,
-      image: item.product.image
+      image: item.product.image,
+      selectedFlavours: item.selectedFlavours,
+      scoopCount: item.scoopCount
     })),
     totals: req.orderTotals,
     coupon: req.appliedCoupon || null
   };
 
   res.render('order-preview', {
-    title: 'Order Preview | Play Cards',
+    title: 'Order Preview | ScoopCraft',
     cartItems: req.order.cartItems,
     customer: req.order.customer,
+    plan: req.order.plan,
     subtotal: req.orderTotals.subtotal,
     tax: req.orderTotals.tax,
     shipping: req.orderTotals.shipping,
@@ -89,10 +94,10 @@ router.post('/preview', buildOrderContext, applyDiscount, (req, res) => {
   });
 });
 
-// Confirm and place order
-router.post('/confirm', async (req, res) => {
+router.post('/confirm', requireAuth, async (req, res) => {
   try {
     const pending = req.session.pendingOrder;
+    const user = await User.findById(req.session.userId);
 
     if (!pending || !pending.cartItems || pending.cartItems.length === 0) {
       return res.redirect('/cart');
@@ -107,6 +112,7 @@ router.post('/confirm', async (req, res) => {
     }));
 
     const order = new Order({
+      user: req.session.userId,
       customer: pending.customer,
       items,
       subtotal: pending.totals.subtotal,
@@ -114,13 +120,35 @@ router.post('/confirm', async (req, res) => {
       shipping: pending.totals.shipping,
       discount: pending.totals.discount || 0,
       total: pending.totals.finalTotal,
+      plan: pending.plan || 'one-time',
       couponCode: pending.coupon || null,
-      status: 'Placed'
+      status: 'Placed',
+      trackingHistory: [
+        {
+          status: 'Placed',
+          note: `Order placed by ${user?.name || pending.customer.name}`,
+          updatedAt: new Date()
+        }
+      ]
     });
 
-    await order.save();
+    order.items = pending.cartItems.map(item => ({
+      product: item.productId,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      lineTotal: item.lineTotal,
+      selectedFlavours: item.selectedFlavours || [],
+      scoopCount: item.scoopCount || 0
+    }));
 
-    // Clear cart and pending order
+    if (user) {
+      user.phone = (pending.customer.phone || '').trim();
+      user.address = (pending.customer.address || '').trim();
+      await user.save();
+    }
+
+    await order.save();
     req.session.cart = [];
     req.session.pendingOrder = null;
 
@@ -128,30 +156,28 @@ router.post('/confirm', async (req, res) => {
   } catch (error) {
     console.error('Error confirming order:', error);
     res.status(500).render('404', {
-      title: 'Error | Play Cards'
+      title: 'Error | ScoopCraft'
     });
   }
 });
 
-// Success page with order summary
-router.get('/success/:id', async (req, res) => {
+router.get('/success/:id', requireAuth, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-
     if (!order) {
       return res.status(404).render('404', {
-        title: 'Order Not Found | Play Cards'
+        title: 'Order Not Found | ScoopCraft'
       });
     }
 
     res.render('order-success', {
-      title: 'Order Placed | Play Cards',
+      title: 'Order Placed | ScoopCraft',
       order
     });
   } catch (error) {
     console.error('Error loading order success page:', error);
     res.status(500).render('404', {
-      title: 'Error | Play Cards'
+      title: 'Error | ScoopCraft'
     });
   }
 });

@@ -1,30 +1,53 @@
     <footer class="main-footer">
       <div class="container">
-        <div class="footer-content">
-          <div class="footer-section">
-            <h4>About Play Cards</h4>
-            <p>We design premium digital and physical gaming cards for players and collectors worldwide.</p>
+        <div class="footer-grid">
+          <div>
+            <h4>ScoopCraft Pints</h4>
+            <p>Small-batch, custom ice cream pints made fresh every week.</p>
           </div>
-          <div class="footer-section">
-            <h4>Quick Links</h4>
-            <ul>
-              <li><a href="/">Home</a></li>
-              <li><a href="/products">Cards</a></li>
-              <li><a href="/cart">Cart</a></li>
-              <li><a href="/checkout">Checkout</a></li>
-            </ul>
+          <div>
+            <h4>Explore</h4>
+            <p><a href="/">Home</a></p>
+            <p><a href="/products">Build Your Pint</a></p>
           </div>
-          <div class="footer-section">
-            <h4>Contact Us</h4>
-            <p>Email: support@playcards.gg</p>
-            <p>Phone: +1 234 567 890</p>
+          <div>
+            <h4>Support</h4>
+            <p><a href="/about">About</a></p>
+            <p><a href="/contact">Contact</a></p>
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; <%= new Date().getFullYear() %> Play Cards. All rights reserved.</p>
+          <p>&copy; <%= new Date().getFullYear() %> ScoopCraft Pints. All rights reserved.</p>
         </div>
       </div>
     </footer>
+
+    <button id="chatbotToggle" class="chatbot-toggle" type="button" aria-label="Open chat assistant">Chat</button>
+    <section id="chatbotPanel" class="chatbot-panel" aria-label="ScoopCraft Assistant">
+      <header class="chatbot-header">
+        <div>
+          <strong>ScoopCraft Assistant</strong>
+          <p>Ask about wishlist, checkout, flavours, and orders.</p>
+        </div>
+        <button id="chatbotClose" type="button" class="chatbot-close" aria-label="Close chat">×</button>
+      </header>
+      <div id="chatbotBody" class="chatbot-body">
+        <div class="chatbot-msg bot">
+          <p>Hello! Need help with products, wishlist, cart, or checkout?</p>
+        </div>
+      </div>
+      <div class="chatbot-prompts">
+        <button type="button" class="chatbot-prompt" data-question="What flavours do you recommend?">Flavour Picks</button>
+        <button type="button" class="chatbot-prompt" data-question="How does wishlist work?">Wishlist Help</button>
+        <button type="button" class="chatbot-prompt" data-question="What are shipping and delivery options?">Shipping</button>
+        <button type="button" class="chatbot-prompt" data-question="How do subscriptions work?">Subscriptions</button>
+      </div>
+      <form id="chatbotForm" class="chatbot-form">
+        <input id="chatbotInput" type="text" placeholder="Type your question..." autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+    </section>
+
     <script src="/js/script.js"></script>
   </body>
 </html>

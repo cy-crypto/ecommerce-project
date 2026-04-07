@@ -2,41 +2,31 @@
 
 <section class="contact-section">
   <div class="container">
-    <h1 class="page-title">Contact Us</h1>
-    <p class="page-subtitle">
-      Have questions about cards, orders, or gameplay? Reach out anytime and we’ll get back to you as soon as we
-      can.
-    </p>
+    <h1 class="page-title">Contact ScoopCraft</h1>
+    <p class="page-subtitle">Questions about flavours, delivery, or subscriptions? Reach out and our team will help.</p>
 
     <div class="contact-grid">
-      <div class="contact-details">
-        <p><strong>Email:</strong> support@playcards.gg</p>
-        <p><strong>Phone:</strong> +1 234 567 890</p>
-        <p><strong>Support Hours:</strong> 9:00 AM – 6:00 PM (Mon – Fri)</p>
-        <p style="margin-top: 10px;">
-          You can also use this form to suggest new card ideas, report bugs, or share feedback on this lab
-          project. Treat it as a template for how a real support contact page would look.
-        </p>
-      </div>
-      <div>
-        <form class="checkout-form">
-          <div class="form-group">
-            <label for="contact-name">Name</label>
-            <input id="contact-name" type="text" placeholder="Your name" required />
-          </div>
-          <div class="form-group">
-            <label for="contact-email">Email</label>
-            <input id="contact-email" type="email" placeholder="you@example.com" required />
-          </div>
-          <div class="form-group">
-            <label for="contact-message">Message</label>
-            <textarea id="contact-message" placeholder="How can we help?" required></textarea>
-          </div>
-          <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
-            <button type="button" class="btn-primary">Send Message</button>
-          </div>
-        </form>
-      </div>
+      <article class="about-card">
+        <h3>Email</h3>
+        <p>hello@scoopcraftpints.com</p>
+        <h3>Phone</h3>
+        <p>+1 (555) 246-7812</p>
+        <h3>Kitchen Studio</h3>
+        <p>14 Creamery Lane, Frostown</p>
+      </article>
+
+      <form class="builder-card contact-form" method="POST" action="#">
+        <label>Name
+          <input type="text" name="name" placeholder="Your name" />
+        </label>
+        <label>Email
+          <input type="email" name="email" placeholder="you@example.com" />
+        </label>
+        <label>Message
+          <textarea name="message" rows="5" placeholder="Tell us what you need..."></textarea>
+        </label>
+        <button type="button" class="btn-primary">Send Message</button>
+      </form>
     </div>
   </div>
 </section>
