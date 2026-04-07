@@ -569,7 +569,7 @@ router.post('/seo', async (req, res) => {
       'custom ice cream pints, flavour builder, artisan dessert, pint subscription';
     settings.canonicalBaseUrl = (canonicalBaseUrl || '').trim();
     settings.robots = (robots || '').trim() || 'index, follow';
-    settings.ogImage = (ogImage || '').trim() || '/assets/home_play_prizes.png';
+    settings.ogImage = (ogImage || '').trim() || '/assets/blackseamer-honey-pint.jpg';
     settings.twitterCard = (twitterCard || '').trim() || 'summary_large_image';
 
     await settings.save();

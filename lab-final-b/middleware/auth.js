@@ -13,7 +13,7 @@ function requireAdmin(req, res, next) {
 
   if (req.session.userRole !== 'Admin' && req.session.userRole !== 'Manager') {
     return res.status(403).render('404', {
-      title: 'Access Denied | Play Cards'
+      title: 'Access Denied | ScoopCraft'
     });
   }
 

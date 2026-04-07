@@ -3,8 +3,8 @@
 ## Current Configuration
 
 Your application is already configured to connect to MongoDB at:
-- **Connection String**: `mongodb://localhost:27017/play-cards-store`
-- **Database Name**: `play-cards-store`
+- **Connection String**: `mongodb://localhost:27017/scoopcraft-store`
+- **Database Name**: `scoopcraft-store`
 - **Default Port**: `27017`
 
 ## Step 1: Start MongoDB Service
@@ -43,7 +43,7 @@ If successful, you'll see `TcpTestSucceeded : True`
 ## Step 3: Install Dependencies (if not done)
 
 ```powershell
-cd "C:\Users\choud\OneDrive - Higher Education Commission\Desktop\WBE TECH SEM 6 - safeCopy\WEB\lab-task-4"
+cd "C:\Users\choud\OneDrive - Higher Education Commission\Desktop\WBE TECH SEM 6 - safeCopy\WEB\lab-final-b"
 npm install
 ```
 
@@ -76,7 +76,7 @@ npm run dev
 You should see in the console:
 ```
 Connected to MongoDB
-Play Cards store running at http://localhost:3004
+ScoopCraft Pints running at http://localhost:3004
 ```
 
 ## Troubleshooting
@@ -129,16 +129,16 @@ If you prefer using MongoDB Atlas (cloud database):
 
 ## Connection String Format
 
-- **Local MongoDB**: `mongodb://localhost:27017/play-cards-store`
-- **With Authentication**: `mongodb://username:password@localhost:27017/play-cards-store`
-- **MongoDB Atlas**: `mongodb+srv://username:password@cluster.mongodb.net/play-cards-store`
+- **Local MongoDB**: `mongodb://localhost:27017/scoopcraft-store`
+- **With Authentication**: `mongodb://username:password@localhost:27017/scoopcraft-store`
+- **MongoDB Atlas**: `mongodb+srv://username:password@cluster.mongodb.net/scoopcraft-store`
 
 ## Environment Variable (Optional)
 
 You can also set the MongoDB URI as an environment variable instead of hardcoding:
 
 ```powershell
-$env:MONGODB_URI="mongodb://localhost:27017/play-cards-store"
+$env:MONGODB_URI="mongodb://localhost:27017/scoopcraft-store"
 npm start
 ```
 

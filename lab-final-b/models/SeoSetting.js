@@ -37,7 +37,7 @@ const seoSettingSchema = new mongoose.Schema(
     ogImage: {
       type: String,
       trim: true,
-      default: '/assets/home_play_prizes.png'
+      default: '/assets/blackseamer-honey-pint.jpg'
     },
     twitterCard: {
       type: String,

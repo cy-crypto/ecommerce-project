@@ -2,13 +2,121 @@
 
 <section class="builder-hero">
   <div class="container">
-    <h1>Shop and Customize Your Pint</h1>
-    <p>Browse our catalog, filter flavours, and configure each pint before adding to cart.</p>
+    <h1>Professional Pint Catalog and Flavor Builder</h1>
+    <p>Discover premium products, compare flavour profiles, and move confidently from selection to checkout.</p>
+    <div class="trust-row top-gap">
+      <span class="trust-chip">⭐ Top Rated Flavours</span>
+      <span class="trust-chip">📦 Fresh Packed Daily</span>
+      <span class="trust-chip">✅ Admin-Managed Live Catalog</span>
+    </div>
   </div>
 </section>
 
 <section class="builder-section">
   <div class="container">
+    <section id="buildYourBox" class="box-builder top-gap">
+      <div class="box-builder-shell">
+        <div class="box-builder-head">
+          <h2>Build Your Box</h2>
+          <p>Create a case in 3 steps: choose pack size, pick flavours, and add your bundle to cart.</p>
+        </div>
+
+        <div class="box-builder-layout">
+          <div class="box-steps">
+            <article class="box-step-card">
+              <h3><span>01</span> Select Case Size</h3>
+              <div class="box-size-options">
+                <label class="box-size-option active">
+                  <input type="radio" name="caseSize" value="4" checked />
+                  <strong>4-Pack</strong>
+                  <small>Great for first orders</small>
+                </label>
+                <label class="box-size-option">
+                  <input type="radio" name="caseSize" value="6" />
+                  <strong>6-Pack</strong>
+                  <small>Best for families</small>
+                </label>
+                <label class="box-size-option">
+                  <input type="radio" name="caseSize" value="8" />
+                  <strong>8-Pack</strong>
+                  <small>Party and events</small>
+                </label>
+              </div>
+            </article>
+
+            <article class="box-step-card">
+              <h3><span>02</span> Select Flavours</h3>
+              <p class="muted">Pick <strong id="boxRequiredCount">4</strong> pints in total from your favorite flavours.</p>
+
+              <div class="box-products-grid">
+                <% if (products && products.length) { %>
+                  <% products.forEach(product => { %>
+                    <article class="box-product-card" data-box-product data-product-id="<%= product._id %>" data-price="<%= Number(product.price || 0) %>" data-flavours="<%= (product.flavourOptions || []).map(item => item.name).join('|') %>">
+                      <img src="<%= product.image %>" alt="<%= product.name %>" class="box-product-image" />
+                      <h4><%= product.name %></h4>
+                      <p>$<%= Number(product.price || 0).toFixed(2) %></p>
+                      <div class="box-qty-control">
+                        <button type="button" class="box-qty-btn" data-action="decrease" aria-label="Decrease quantity">-</button>
+                        <input type="text" value="0" class="box-qty-input" readonly data-qty-input />
+                        <button type="button" class="box-qty-btn" data-action="increase" aria-label="Increase quantity">+</button>
+                      </div>
+                    </article>
+                  <% }) %>
+                <% } else { %>
+                  <article class="builder-card">
+                    <h3>No products available</h3>
+                    <p>Add products in the admin dashboard to enable bundle builder.</p>
+                  </article>
+                <% } %>
+              </div>
+            </article>
+          </div>
+
+          <aside class="box-summary-card" id="boxSummaryCard">
+            <h3><span>03</span> Your Bundle</h3>
+            <div class="summary-row"><span>Case Size</span><strong id="boxCaseSizeLabel">4-Pack</strong></div>
+            <div class="summary-row"><span>Selected</span><strong id="boxSelectedCount">0</strong></div>
+            <div class="summary-row"><span>Add More</span><strong id="boxRemainingCount">4</strong></div>
+            <div class="summary-row"><span>Subtotal</span><strong id="boxSubtotal">$0.00</strong></div>
+
+            <div class="box-plan-picker">
+              <button type="button" class="box-plan-btn active" data-plan="one-time" data-discount="0">One-time</button>
+              <button type="button" class="box-plan-btn" data-plan="subscription" data-discount="20">20% Off Subscribe</button>
+            </div>
+
+            <div class="summary-row total"><span>Estimated Total</span><strong id="boxEstimatedTotal">$0.00</strong></div>
+            <button type="button" id="boxAddBundleBtn" class="btn-primary full-width" disabled>Add Bundle To Cart</button>
+            <a href="/cart" class="btn-outline full-width top-gap">View Cart</a>
+            <p id="boxFeedback" class="muted top-gap">Select a case size and pick your flavors.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section id="boxConfigModal" class="box-modal" aria-hidden="true">
+      <div class="box-modal-backdrop" data-box-close-modal></div>
+      <div class="box-modal-card" role="dialog" aria-modal="true" aria-labelledby="boxModalTitle">
+        <div class="box-modal-head">
+          <h3 id="boxModalTitle">Customize Product</h3>
+          <button type="button" class="box-modal-close" data-box-close-modal aria-label="Close">x</button>
+        </div>
+        <p class="muted" id="boxModalProductName">Choose one base and your flavour mix.</p>
+
+        <div class="box-modal-section">
+          <h4>Choose Base (up to 1)</h4>
+          <div class="box-options-grid" id="boxBaseOptions"></div>
+        </div>
+
+        <div class="box-modal-section">
+          <h4 id="boxFlavourLimitLabel">Choose Flavours (up to 3)</h4>
+          <div class="box-options-grid" id="boxFlavourOptions"></div>
+        </div>
+
+        <p class="muted" id="boxModalStatus">Select 1 base and flavours to continue.</p>
+        <button type="button" id="boxModalConfirmBtn" class="btn-primary full-width" disabled>Add Product To Bundle</button>
+      </div>
+    </section>
+
     <form method="GET" action="/products" class="filter-form">
       <label>Search
         <input type="text" name="q" value="<%= q || '' %>" placeholder="Search pints or flavours" />
@@ -43,6 +151,26 @@
       <% } %>
     </div>
 
+    <section class="conversion-band top-gap">
+      <div class="conversion-grid">
+        <article>
+          <h2>Conversion-Oriented Shopping Experience</h2>
+          <p>Each product page includes precise customization controls, transparent pricing, and quick add-to-cart actions.</p>
+          <ul class="tick-list">
+            <li>Clear inventory and pricing visibility</li>
+            <li>Wishlist support for registered users</li>
+            <li>Connected cart, checkout, and order tracking</li>
+            <li>SEO-friendly product metadata from dashboard</li>
+          </ul>
+        </article>
+        <article class="builder-card">
+          <h3>Ready to Checkout?</h3>
+          <p>Review your cart and complete a secure purchase with one-time or subscription plans.</p>
+          <a href="/cart" class="btn-primary">Go to Cart</a>
+        </article>
+      </div>
+    </section>
+
     <div class="builder-grid top-gap">
       <article class="builder-card">
         <h2>How custom flavour picking works</h2>
@@ -62,6 +190,30 @@
         <h2>Need bulk orders?</h2>
         <p>Use our contact page for events, office gifting, and seasonal corporate pint drops.</p>
         <a href="/contact" class="btn-outline">Contact Team ScoopCraft</a>
+      </article>
+    </div>
+
+    <div class="builder-grid top-gap">
+      <article class="builder-card">
+        <h2>Quality Commitment</h2>
+        <p>All products are prepared in controlled batches to preserve texture, freshness, and flavour consistency.</p>
+      </article>
+      <article class="builder-card">
+        <h2>Storefront + Admin Connected</h2>
+        <p>Admin CRUD updates product information, availability, and SEO fields that are reflected on this page in real time.</p>
+      </article>
+    </div>
+
+    <div class="builder-grid top-gap">
+      <article class="builder-card">
+        <h2>Frequently Asked Questions</h2>
+        <p><strong>Can I search for specific flavours?</strong><br />Yes, use the search field above to find products by name, description, or flavour options.</p>
+        <p><strong>Can I reorder quickly?</strong><br />Yes, returning users can use order history and wishlist to reorder in fewer steps.</p>
+      </article>
+      <article class="builder-card">
+        <h2>Need Catering or Bulk Orders?</h2>
+        <p>For events and corporate gifting, contact us with quantity, preferred flavours, and delivery window.</p>
+        <a href="/contact" class="btn-primary">Request Bulk Support</a>
       </article>
     </div>
   </div>

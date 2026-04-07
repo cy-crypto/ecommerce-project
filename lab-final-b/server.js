@@ -7,7 +7,7 @@ const SeoSetting = require('./models/SeoSetting');
 const { loadCurrentUser } = require('./middleware/auth');
 
 const app = express();
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3004;
 
 // MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/scoopcraft-store';
@@ -72,7 +72,7 @@ app.use(async (req, res, next) => {
         setting?.metaKeywords || 'custom ice cream pints, flavour builder, artisan dessert, pint subscription',
       canonicalBaseUrl: setting?.canonicalBaseUrl || '',
       robots: setting?.robots || 'index, follow',
-      ogImage: setting?.ogImage || '/assets/home_play_prizes.png',
+      ogImage: setting?.ogImage || '/assets/blackseamer-honey-pint.jpg',
       twitterCard: setting?.twitterCard || 'summary_large_image'
     };
 
@@ -81,7 +81,7 @@ app.use(async (req, res, next) => {
     res.locals.seo.ogImageUrl =
       res.locals.seo.ogImage && /^https?:\/\//i.test(res.locals.seo.ogImage)
         ? res.locals.seo.ogImage
-        : `${baseUrl}${res.locals.seo.ogImage || '/assets/home_play_prizes.png'}`;
+        : `${baseUrl}${res.locals.seo.ogImage || '/assets/blackseamer-honey-pint.jpg'}`;
   } catch (error) {
     res.locals.seo = {
       siteTitle: 'ScoopCraft Pints',
@@ -90,13 +90,13 @@ app.use(async (req, res, next) => {
       metaKeywords: 'custom ice cream pints, flavour builder, artisan dessert, pint subscription',
       canonicalBaseUrl: '',
       robots: 'index, follow',
-      ogImage: '/assets/home_play_prizes.png',
+      ogImage: '/assets/blackseamer-honey-pint.jpg',
       twitterCard: 'summary_large_image'
     };
 
     const fallbackBaseUrl = `${req.protocol}://${req.get('host')}`;
     res.locals.seo.currentUrl = `${fallbackBaseUrl}${req.originalUrl || ''}`;
-    res.locals.seo.ogImageUrl = `${fallbackBaseUrl}/assets/home_play_prizes.png`;
+    res.locals.seo.ogImageUrl = `${fallbackBaseUrl}/assets/blackseamer-honey-pint.jpg`;
   }
   next();
 });

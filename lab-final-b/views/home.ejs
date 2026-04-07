@@ -4,26 +4,59 @@
   <div class="container hero-grid">
     <div>
       <span class="kicker">Custom Ice Cream Pints</span>
-      <h1>Craft your dream pint with 3 or 4 flavour layers.</h1>
+      <h1>Craft your dream pint with chef-curated layers and doorstep delivery.</h1>
       <p>
-        From berry-forward scoops to rich caramel ribbons, ScoopCraft lets you mix artisan flavours into one custom pint.
-        Choose one-time delivery or a weekly subscription plan.
+        ScoopCraft is a premium dessert commerce experience where each pint is made to order.
+        Build 3-layer classics or 4-layer deluxe pints, then choose one-time delivery or subscription.
       </p>
       <div class="hero-actions">
         <a href="/products" class="btn-primary">Build My Pint</a>
-        <a href="/about" class="btn-outline">Our Story</a>
+        <a href="/checkout" class="btn-outline">Start Secure Checkout</a>
       </div>
       <div class="hero-metrics">
         <div><strong>24h</strong><span>Fresh Churned</span></div>
         <div><strong><%= totalFlavours || 0 %></strong><span>Available Flavours</span></div>
-        <div><strong>2</strong><span>Order Plans</span></div>
+        <div><strong><%= totalProducts || 0 %></strong><span>Live Products</span></div>
+      </div>
+      <div class="trust-row top-gap">
+        <span class="trust-chip">🍨 Premium Ingredients</span>
+        <span class="trust-chip">🚚 Cold-Chain Delivery</span>
+        <span class="trust-chip">🔒 Secure Checkout</span>
       </div>
     </div>
     <div class="hero-visual">
       <div class="pint-card">
-        <h3>Signature Stack</h3>
+        <h3>Signature Stack of The Week</h3>
         <p><%= signatureStack || 'Add flavour options in dashboard to build your live signature stack.' %></p>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="value-pillars">
+  <div class="container">
+    <h2 class="section-title">Built Like a Professional Food Brand</h2>
+    <div class="icon-grid">
+      <article class="icon-card">
+        <span class="icon-circle">🥛</span>
+        <h3>Farm Fresh Inputs</h3>
+        <p>We source dairy and mix-ins from quality suppliers with consistent batch standards.</p>
+      </article>
+      <article class="icon-card">
+        <span class="icon-circle">🧪</span>
+        <h3>Flavor Engineering</h3>
+        <p>Every product supports modular flavour options, making each purchase truly personalized.</p>
+      </article>
+      <article class="icon-card">
+        <span class="icon-circle">📈</span>
+        <h3>Conversion Focused</h3>
+        <p>Guided product cards, quick cart actions, and frictionless checkout improve order completion.</p>
+      </article>
+      <article class="icon-card">
+        <span class="icon-circle">🛡️</span>
+        <h3>SEO + Trust Ready</h3>
+        <p>On-page SEO metadata, canonical links, and secure headers are active across storefront pages.</p>
+      </article>
     </div>
   </div>
 </section>
@@ -46,6 +79,26 @@
         <p>Add flavour options in admin products and they will appear here automatically from live DB.</p>
       </article>
     <% } %>
+  </div>
+</section>
+
+<section class="conversion-band">
+  <div class="container conversion-grid">
+    <article>
+      <h2>Why Customers Convert on ScoopCraft</h2>
+      <p>Our storefront is designed for confidence from discovery to payment with clear options at every step.</p>
+      <ul class="tick-list">
+        <li>Clear product detail and customization controls</li>
+        <li>Live cart pricing with tax and shipping transparency</li>
+        <li>Checkout profile support for fast repeat orders</li>
+        <li>Wishlist and order tracking for signed-in users</li>
+      </ul>
+    </article>
+    <article class="builder-card">
+      <h3>Fast Path to Purchase</h3>
+      <p>Discover → Customize → Cart → Checkout → Track in My Orders.</p>
+      <a href="/products" class="btn-primary">Shop Products</a>
+    </article>
   </div>
 </section>
 
@@ -77,26 +130,75 @@
 
 <section class="build-steps">
   <div class="container">
-    <h2 class="section-title">How It Works</h2>
+    <h2 class="section-title">How Ordering Works</h2>
     <div class="steps-wrap">
       <div class="step-item">
         <span>1</span>
-        <h3>Choose Your Pint Type</h3>
-        <p>Select a 3-flavour classic or 4-flavour deluxe custom pint.</p>
+        <h3>Browse Catalog</h3>
+        <p>Find your perfect base pint from live products managed in the admin dashboard.</p>
       </div>
       <div class="step-item">
         <span>2</span>
-        <h3>Pick Flavours</h3>
-        <p>Mix bold and creamy flavours to create your own layered scoop profile.</p>
+        <h3>Customize Flavour Layers</h3>
+        <p>Pick exactly 3 or 4 flavour layers with validation built directly into product detail pages.</p>
       </div>
       <div class="step-item">
         <span>3</span>
-        <h3>Choose Plan</h3>
-        <p>Order once for a treat or subscribe for regular pint deliveries.</p>
+        <h3>Checkout and Track</h3>
+        <p>Confirm plan, shipping, and payment details, then monitor order status after sign in.</p>
+      </div>
+      <div class="step-item">
+        <span>4</span>
+        <h3>Admin Updates Go Live</h3>
+        <p>Any product or SEO update from dashboard reflects automatically on storefront pages.</p>
       </div>
     </div>
     <div class="center-cta">
       <a href="/products" class="btn-primary">Start Building Your Pint</a>
+    </div>
+  </div>
+</section>
+
+<section class="social-proof">
+  <div class="container">
+    <h2 class="section-title">Loved by Dessert Fans</h2>
+    <div class="icon-grid">
+      <article class="icon-card">
+        <p>"The custom flavour flow is smooth, and checkout feels very premium."</p>
+        <strong>- Priya, Weekly Subscriber</strong>
+      </article>
+      <article class="icon-card">
+        <p>"I can track every order and quickly reorder from my account. Super practical."</p>
+        <strong>- Ahmed, Returning Customer</strong>
+      </article>
+      <article class="icon-card">
+        <p>"As an admin, changing product SEO and details instantly updates the live storefront."</p>
+        <strong>- Store Manager</strong>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="faq-section">
+  <div class="container">
+    <h2 class="section-title">Frequently Asked Questions</h2>
+    <div class="builder-grid">
+      <article class="builder-card">
+        <h3>Do dashboard product edits reflect on the website?</h3>
+        <p>Yes. Product CRUD from the admin panel updates live listings and detail pages automatically.</p>
+      </article>
+      <article class="builder-card">
+        <h3>Can I set SEO tags per product?</h3>
+        <p>Yes. Admin product forms include SEO title, description, keywords, robots, and canonical fields.</p>
+      </article>
+      <article class="builder-card">
+        <h3>Is checkout secure?</h3>
+        <p>Security headers are enabled through Helmet and the checkout flow uses authenticated sessions.</p>
+      </article>
+      <article class="builder-card">
+        <h3>What can signed-in users manage?</h3>
+        <p>Signin users can manage wishlist, cart, checkout, order history, and order tracking pages.</p>
+      </article>
     </div>
   </div>
 </section>

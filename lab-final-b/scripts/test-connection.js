@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/play-cards-store';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/scoopcraft-store';
 
 console.log('Attempting to connect to MongoDB...');
 console.log('Connection string:', MONGODB_URI.replace(/\/\/.*@/, '//***:***@')); // Hide credentials if any
