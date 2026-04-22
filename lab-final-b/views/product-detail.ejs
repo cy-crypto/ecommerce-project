@@ -2,14 +2,27 @@
 
 <section class="product-detail">
   <div class="detail-grid container">
-    <img src="<%= product.image %>" alt="<%= product.name %>" class="detail-image" />
-    <div>
-      <h1><%= product.name %></h1>
-      <p><strong>Price:</strong> $<%= product.price.toFixed(2) %></p>
-      <p><strong>Stock:</strong> <%= product.stock %></p>
-      <p><%= product.description %></p>
+    <img src="<%= product.image %>" alt="<%= product.name %>" class="detail-image sc-animate" data-animate="fade-right" />
+    <div class="product-detail-panel sc-animate" data-animate="fade-left">
+      <h1 class="product-title"><%= product.name %></h1>
 
-      <form id="customAddToCartForm" class="builder-card" data-product-id="<%= product._id %>">
+      <div class="product-meta-row">
+        <div class="product-price-chip" aria-label="Product price">
+          <span class="product-price-chip__label">Price</span>
+          <strong>$<%= Number(product.price || 0).toFixed(2) %></strong>
+        </div>
+        <div class="product-stock-chip <%= Number(product.stock || 0) > 10 ? 'in-stock' : (Number(product.stock || 0) > 0 ? 'low-stock' : 'out-stock') %>" aria-label="Product stock status">
+          <span class="product-stock-chip__label">Stock</span>
+          <strong><%= Number(product.stock || 0) > 0 ? `${product.stock} available` : 'Out of stock' %></strong>
+        </div>
+      </div>
+
+      <article class="product-description-card">
+        <h3>About This Pint</h3>
+        <p><%= product.description %></p>
+      </article>
+
+      <form id="customAddToCartForm" class="builder-card" data-product-id="<%= product._id %>" data-product-image="<%= product.image %>">
         <h3>Customize This Pint</h3>
         <label class="choice-row">
           <input type="radio" name="scoopCount" value="3" checked />
@@ -27,6 +40,7 @@
         </label>
 
         <% if (product.flavourOptions && product.flavourOptions.length) { %>
+          <div class="product-selected-flavour-preview" data-flavour-preview aria-live="polite"></div>
           <div class="flavour-picker-grid top-gap">
             <% product.flavourOptions.forEach(flavour => { %>
               <label class="flavour-picker" style="--flavour-accent:<%= flavour.color || '#ffe5c2' %>">
@@ -42,7 +56,7 @@
         <% } %>
 
         <div class="product-actions top-gap">
-          <button id="addToCartBtn" type="submit" class="btn-primary">Add To Cart</button>
+          <button id="addToCartBtn" type="submit" class="btn-primary btn-glow">Add To Cart</button>
         </div>
       </form>
 
@@ -66,57 +80,20 @@
 
       <div id="cartMessage" style="display:none;"></div>
       <div id="wishlistMessage" style="display:none;"></div>
-
-      <div class="builder-grid top-gap">
-        <article class="builder-card">
-          <h3>Product Highlights</h3>
-          <p>Made in small batches with rich ingredients and flavor-balanced profiles.</p>
-          <div class="flavour-chip-wrap">
-            <span class="flavour-chip">Fresh Churned</span>
-            <span class="flavour-chip">Cold Packed</span>
-            <span class="flavour-chip">Flavor Layered</span>
-          </div>
-        </article>
-        <article class="builder-card">
-          <h3>Purchase Confidence</h3>
-          <p>Transparent pricing, cart review, and checkout summaries help customers buy with confidence.</p>
-          <a href="/checkout" class="btn-outline">Go to Checkout</a>
-        </article>
-      </div>
     </div>
   </div>
 </section>
 
-<section class="builder-section">
-  <div class="container">
-    <div class="builder-grid">
-      <article class="builder-card">
-        <h2>Ingredients and Sourcing</h2>
-        <p>We focus on dependable sourcing and premium mix-ins for consistent quality in every pint shipped.</p>
-      </article>
-      <article class="builder-card">
-        <h2>Shipping and Handling</h2>
-        <p>Orders are insulated for cold-chain delivery to keep texture and flavor intact from kitchen to doorstep.</p>
-      </article>
-      <article class="builder-card">
-        <h2>Admin-Driven Product Details</h2>
-        <p>This product page is connected to admin-managed catalog and SEO settings, including metadata and canonical details.</p>
-      </article>
-      <article class="builder-card">
-        <h2>Need Assistance?</h2>
-        <p>Use the chat assistant for flavor recommendations, shipping questions, and order flow guidance.</p>
-      </article>
-    </div>
-  </div>
-</section>
+
+
 
 <section class="builder-section">
   <div class="container">
-    <h2 class="section-title">You May Also Like</h2>
+    <h2 class="section-title sc-animate" data-animate="fade-up">You May Also Like</h2>
     <div class="products-grid">
       <% if (relatedProducts && relatedProducts.length) { %>
-        <% relatedProducts.forEach(item => { %>
-          <article class="product-card">
+        <% relatedProducts.forEach((item, idx) => { %>
+          <article class="product-card product-card-clickable sc-animate" data-animate="fade-up" data-delay="<%= idx * 80 %>" data-href="/products/<%= item._id %>" tabindex="0" role="link" aria-label="Open <%= item.name %>">
             <img src="<%= item.image %>" alt="<%= item.name %>" class="product-image" />
             <h3><%= item.name %></h3>
             <p>$<%= Number(item.price || 0).toFixed(2) %></p>
@@ -129,5 +106,3 @@
 </section>
 
 <%- include('partials/footer') %>
-
-

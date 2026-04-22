@@ -4,11 +4,6 @@
   <div class="container">
     <h1>Professional Pint Catalog and Flavor Builder</h1>
     <p>Discover premium products, compare flavour profiles, and move confidently from selection to checkout.</p>
-    <div class="trust-row top-gap">
-      <span class="trust-chip">⭐ Top Rated Flavours</span>
-      <span class="trust-chip">📦 Fresh Packed Daily</span>
-      <span class="trust-chip">✅ Admin-Managed Live Catalog</span>
-    </div>
   </div>
 </section>
 
@@ -51,7 +46,7 @@
               <div class="box-products-grid">
                 <% if (products && products.length) { %>
                   <% products.forEach(product => { %>
-                    <article class="box-product-card" data-box-product data-product-id="<%= product._id %>" data-price="<%= Number(product.price || 0) %>" data-flavours="<%= (product.flavourOptions || []).map(item => item.name).join('|') %>">
+                    <article class="box-product-card" data-box-product data-product-id="<%= product._id %>" data-price="<%= Number(product.price || 0) %>" data-flavours="<%= (product.flavourOptions || []).map(item => item.name).join('|') %>" data-flavour-details="<%= encodeURIComponent(JSON.stringify((product.flavourOptions || []).map(item => ({ name: item.name, note: item.note || '', color: item.color || '#ffe5c2' })))) %>">
                       <img src="<%= product.image %>" alt="<%= product.name %>" class="box-product-image" />
                       <h4><%= product.name %></h4>
                       <p>$<%= Number(product.price || 0).toFixed(2) %></p>
@@ -104,12 +99,13 @@
 
         <div class="box-modal-section">
           <h4>Choose Base (up to 1)</h4>
-          <div class="box-options-grid" id="boxBaseOptions"></div>
+          <div class="box-options-grid box-base-picker-grid" id="boxBaseOptions"></div>
         </div>
 
         <div class="box-modal-section">
           <h4 id="boxFlavourLimitLabel">Choose Flavours (up to 3)</h4>
-          <div class="box-options-grid" id="boxFlavourOptions"></div>
+          <div id="boxSelectedFlavourPreview" class="box-selected-flavour-preview" aria-live="polite"></div>
+          <div class="flavour-picker-grid box-flavour-picker-grid" id="boxFlavourOptions"></div>
         </div>
 
         <p class="muted" id="boxModalStatus">Select 1 base and flavours to continue.</p>
@@ -128,7 +124,7 @@
     <div class="products-grid spacious">
       <% if (products && products.length) { %>
         <% products.forEach(product => { %>
-          <article class="product-card">
+          <article class="product-card product-card-clickable" data-href="/products/<%= product._id %>" tabindex="0" role="link" aria-label="Open <%= product.name %>">
             <img src="<%= product.image %>" alt="<%= product.name %>" class="product-image" />
             <h3><%= product.name %></h3>
             <p><%= product.shortDescription || product.description %></p>

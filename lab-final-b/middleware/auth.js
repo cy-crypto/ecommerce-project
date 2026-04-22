@@ -22,6 +22,8 @@ function requireAdmin(req, res, next) {
 
 function loadCurrentUser(req, res, next) {
   res.locals.currentUser = req.session.currentUser || null;
+  const cart = Array.isArray(req.session.cart) ? req.session.cart : [];
+  res.locals.cartCount = cart.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
   next();
 }
 

@@ -1,0 +1,585 @@
+{
+  "generatedAt": "2026-04-14",
+  "site": {
+    "name": "ScoopCraft Pints",
+    "domainLocal": "http://localhost:3004",
+    "stack": ["Node.js", "Express", "EJS", "MongoDB", "Mongoose"],
+    "summary": "Premium custom ice cream pint ecommerce with build-your-box, wishlist, secure session auth, checkout, order tracking, admin CRUD, and SEO settings.",
+    "brandClaims": [
+      "Small-batch handcrafted pints",
+      "Custom flavor layering",
+      "One-time and weekly subscription ordering",
+      "Cold-chain delivery handling"
+    ]
+  },
+  "support": {
+    "email": "hello@scoopcraftpints.com",
+    "phone": "+1 (555) 246-7812",
+    "address": "14 Creamery Lane, Frostown",
+    "supportPage": "/contact",
+    "faqHighlights": [
+      "How to build a custom pint",
+      "How delivery keeps ice cream fresh",
+      "One-time vs subscription orders",
+      "How to track orders"
+    ]
+  },
+  "commercePolicyFacts": {
+    "taxRate": "8%",
+    "shippingFlatRate": "$5.99",
+    "shippingETA": "2-3 business days",
+    "shippingMethod": "Cold-chain insulated packaging with dry ice",
+    "subscriptionDiscount": "20% off on weekly subscription in build/checkout flow",
+    "couponCodes": [
+      {
+        "code": "SAVE10",
+        "discount": "10% off base total before final total",
+        "source": "middleware/applyDiscount.js"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "name": "Home",
+      "path": "/",
+      "access": "public",
+      "purpose": "Featured products, flavor highlights, FAQ, conversion sections"
+    },
+    {
+      "name": "Products",
+      "path": "/products",
+      "access": "public",
+      "purpose": "Catalog, search by name/description/flavor, Build Your Box"
+    },
+    {
+      "name": "Product Detail",
+      "path": "/products/:id",
+      "access": "public",
+      "purpose": "Customize flavor layers and add to cart"
+    },
+    {
+      "name": "Cart",
+      "path": "/cart",
+      "access": "public",
+      "purpose": "Cart review, quantity updates, remove items"
+    },
+    {
+      "name": "Checkout",
+      "path": "/checkout",
+      "access": "signed-in",
+      "purpose": "Shipping details, plan selection, order preview"
+    },
+    {
+      "name": "Order Preview",
+      "path": "/order/preview",
+      "access": "signed-in",
+      "purpose": "Review totals, discount, customer details before confirm"
+    },
+    {
+      "name": "Order Success",
+      "path": "/order/success/:id",
+      "access": "signed-in",
+      "purpose": "Order confirmation and tracking history snapshot"
+    },
+    {
+      "name": "My Orders",
+      "path": "/my-orders",
+      "access": "signed-in",
+      "purpose": "Order history with status and plan"
+    },
+    {
+      "name": "Track Order",
+      "path": "/track-order",
+      "access": "signed-in",
+      "purpose": "Track specific order timeline"
+    },
+    {
+      "name": "Wishlist",
+      "path": "/wishlist",
+      "access": "signed-in",
+      "purpose": "Saved/favorite products"
+    },
+    {
+      "name": "Sign In",
+      "path": "/auth/signin",
+      "access": "public",
+      "purpose": "Customer login"
+    },
+    {
+      "name": "Sign Up",
+      "path": "/auth/signup",
+      "access": "public",
+      "purpose": "Customer registration"
+    },
+    {
+      "name": "About",
+      "path": "/about",
+      "access": "public",
+      "purpose": "Brand story, mission, process"
+    },
+    {
+      "name": "Contact",
+      "path": "/contact",
+      "access": "public",
+      "purpose": "Support contact details and enquiry form"
+    },
+    {
+      "name": "Admin Sign In",
+      "path": "/admin/signin",
+      "access": "public",
+      "purpose": "Admin/manager authentication"
+    },
+    {
+      "name": "Admin Dashboard",
+      "path": "/admin",
+      "access": "admin-or-manager",
+      "purpose": "Overview of products, orders, users"
+    },
+    {
+      "name": "Admin Products",
+      "path": "/admin/products",
+      "access": "admin-or-manager",
+      "purpose": "Product CRUD management"
+    },
+    {
+      "name": "Admin Orders",
+      "path": "/admin/orders",
+      "access": "admin-or-manager",
+      "purpose": "Update order statuses Placed -> Processing -> Delivered"
+    },
+    {
+      "name": "Admin Users",
+      "path": "/admin/users",
+      "access": "admin-or-manager",
+      "purpose": "Manage users, roles, status"
+    },
+    {
+      "name": "Admin SEO",
+      "path": "/admin/seo",
+      "access": "admin-or-manager",
+      "purpose": "Manage global SEO defaults"
+    }
+  ],
+  "products": [
+    {
+      "name": "Midnight Cocoa Swirl Pint",
+      "price": 11.5,
+      "rarity": "Signature",
+      "description": "Deep cocoa gelato folded with dark fudge ribbons and sea-salt crunch.",
+      "flavours": ["Dark Cocoa", "Fudge Ribbon", "Sea-Salt Crunch"]
+    },
+    {
+      "name": "Blueberry Cheesecake Pint",
+      "price": 10.75,
+      "rarity": "Signature",
+      "description": "Creamy cheesecake base layered with blueberry compote and biscuit crumble.",
+      "flavours": ["Cheesecake Cream", "Blueberry Compote", "Biscuit Crumble"]
+    },
+    {
+      "name": "Mango Coconut Cloud Pint",
+      "price": 10.25,
+      "rarity": "Seasonal",
+      "description": "Tropical mango sorbet marbled with coconut cream and toasted flakes.",
+      "flavours": ["Alphonso Mango", "Coconut Cream", "Toasted Coconut"]
+    },
+    {
+      "name": "Pistachio Honey Crunch Pint",
+      "price": 12.0,
+      "rarity": "Reserve",
+      "description": "Roasted pistachio base with wildflower honey and caramelized nut brittle.",
+      "flavours": ["Roasted Pistachio", "Wildflower Honey", "Nut Brittle"]
+    },
+    {
+      "name": "Strawberry Matcha Velvet Pint",
+      "price": 11.0,
+      "rarity": "Signature",
+      "description": "Silky matcha cream paired with strawberry ribbons and white chocolate pearls.",
+      "flavours": ["Ceremonial Matcha", "Strawberry Ribbon", "White Chocolate Pearl"]
+    },
+    {
+      "name": "Caramel Coffee Crunch Pint",
+      "price": 11.25,
+      "rarity": "Reserve",
+      "description": "Cold-brew coffee base with salted caramel and espresso bean crunch.",
+      "flavours": ["Cold Brew Cream", "Salted Caramel", "Espresso Crisp"]
+    },
+    {
+      "name": "Vanilla Berry Ripple Pint",
+      "price": 10.5,
+      "rarity": "Signature",
+      "description": "Madagascar vanilla with raspberry ripple and shortbread cookie crumble.",
+      "flavours": ["Madagascar Vanilla", "Raspberry Ribbon", "Shortbread Crumble", "Cream Top Swirl"]
+    },
+    {
+      "name": "Hazelnut Praline Pint",
+      "price": 11.75,
+      "rarity": "Reserve",
+      "description": "Roasted hazelnut cream with praline shards and silky milk chocolate folds.",
+      "flavours": ["Roasted Hazelnut", "Praline Crunch", "Milk Chocolate Fold", "Toffee Glaze"]
+    },
+    {
+      "name": "Lemon Basil Sorbet Pint",
+      "price": 9.95,
+      "rarity": "Seasonal",
+      "description": "Zesty lemon sorbet with basil syrup ribbons and candied peel bites.",
+      "flavours": ["Lemon Zest Sorbet", "Sweet Basil Syrup", "Candied Peel", "Cool Mint Mist"]
+    },
+    {
+      "name": "Cookie Butter Dream Pint",
+      "price": 10.95,
+      "rarity": "Signature",
+      "description": "Spiced cookie butter base layered with biscuit chunks and caramel swirls.",
+      "flavours": ["Spiced Cookie Butter", "Biscuit Chunks", "Caramel Swirl", "Vanilla Cream Core"]
+    },
+    {
+      "name": "Cherry Chocolate Noir Pint",
+      "price": 12.15,
+      "rarity": "Reserve",
+      "description": "Dark chocolate base with black cherry compote and cocoa nib crackle.",
+      "flavours": ["Noir Chocolate", "Black Cherry Compote", "Cocoa Nib Crunch", "Cherry Syrup Ribbon"]
+    },
+    {
+      "name": "Salted Maple Pecan Pint",
+      "price": 11.35,
+      "rarity": "Signature",
+      "description": "Maple cream with toasted pecans, sea-salt caramel, and butter toffee chips.",
+      "flavours": ["Maple Cream", "Toasted Pecan", "Sea-Salt Caramel", "Toffee Chip"]
+    },
+    {
+      "name": "Passionfruit Yogurt Pint",
+      "price": 10.35,
+      "rarity": "Seasonal",
+      "description": "Tangy yogurt base infused with passionfruit puree and honey granola bites.",
+      "flavours": ["Yogurt Cream", "Passionfruit Puree", "Honey Granola", "Citrus Zest"]
+    },
+    {
+      "name": "Mocha Brownie Batter Pint",
+      "price": 11.85,
+      "rarity": "Reserve",
+      "description": "Mocha cream packed with fudgy brownie chunks and chocolate sauce ribbons.",
+      "flavours": ["Mocha Espresso", "Brownie Chunk", "Chocolate Sauce", "Cocoa Dust"]
+    },
+    {
+      "name": "Rose Pistachio Kulfi Pint",
+      "price": 11.45,
+      "rarity": "Seasonal",
+      "description": "Kulfi-inspired cream with rose syrup, pistachio bits, and saffron threads.",
+      "flavours": ["Kulfi Cream", "Rose Syrup", "Pistachio Bits", "Saffron Milk"]
+    },
+    {
+      "name": "Banoffee Pie Pint",
+      "price": 10.9,
+      "rarity": "Signature",
+      "description": "Banana cream with toffee ribbons, pie crust crumble, and cocoa dust.",
+      "flavours": ["Banana Cream", "Toffee Ribbon", "Pie Crust Crumble", "Cocoa Dust"]
+    },
+    {
+      "name": "Black Sesame Honey Pint",
+      "price": 11.2,
+      "rarity": "Reserve",
+      "description": "Toasted black sesame cream balanced with floral honey and brittle shards.",
+      "flavours": ["Black Sesame Cream", "Floral Honey", "Sesame Brittle", "Vanilla Accent"]
+    }
+  ],
+  "allFlavours": [
+    "Dark Cocoa",
+    "Fudge Ribbon",
+    "Sea-Salt Crunch",
+    "Cheesecake Cream",
+    "Blueberry Compote",
+    "Biscuit Crumble",
+    "Alphonso Mango",
+    "Coconut Cream",
+    "Toasted Coconut",
+    "Roasted Pistachio",
+    "Wildflower Honey",
+    "Nut Brittle",
+    "Ceremonial Matcha",
+    "Strawberry Ribbon",
+    "White Chocolate Pearl",
+    "Cold Brew Cream",
+    "Salted Caramel",
+    "Espresso Crisp",
+    "Madagascar Vanilla",
+    "Raspberry Ribbon",
+    "Shortbread Crumble",
+    "Cream Top Swirl",
+    "Roasted Hazelnut",
+    "Praline Crunch",
+    "Milk Chocolate Fold",
+    "Toffee Glaze",
+    "Lemon Zest Sorbet",
+    "Sweet Basil Syrup",
+    "Candied Peel",
+    "Cool Mint Mist",
+    "Spiced Cookie Butter",
+    "Biscuit Chunks",
+    "Caramel Swirl",
+    "Vanilla Cream Core",
+    "Noir Chocolate",
+    "Black Cherry Compote",
+    "Cocoa Nib Crunch",
+    "Cherry Syrup Ribbon",
+    "Maple Cream",
+    "Toasted Pecan",
+    "Sea-Salt Caramel",
+    "Toffee Chip",
+    "Yogurt Cream",
+    "Passionfruit Puree",
+    "Honey Granola",
+    "Citrus Zest",
+    "Mocha Espresso",
+    "Brownie Chunk",
+    "Chocolate Sauce",
+    "Cocoa Dust",
+    "Kulfi Cream",
+    "Rose Syrup",
+    "Pistachio Bits",
+    "Saffron Milk",
+    "Banana Cream",
+    "Toffee Ribbon",
+    "Pie Crust Crumble",
+    "Black Sesame Cream",
+    "Floral Honey",
+    "Sesame Brittle",
+    "Vanilla Accent"
+  ],
+  "chatbotCurrentIntents": [
+    "flavours_list",
+    "products_list",
+    "shipping",
+    "subscription",
+    "cart_checkout",
+    "order_tracking",
+    "wishlist",
+    "customization",
+    "recommendation",
+    "pricing",
+    "returns",
+    "admin",
+    "account",
+    "support",
+    "chocolate",
+    "fruity",
+    "howto"
+  ],
+  "chatbotQuestionBank": {
+    "products": [
+      "Show me all products",
+      "What do you sell?",
+      "Which pints are available today?",
+      "List premium or reserve products",
+      "Do you have seasonal flavors?",
+      "Best products under $11",
+      "Most expensive pints",
+      "What is your full catalog?",
+      "Which products are best for first orders?",
+      "Can I browse by flavor profile?"
+    ],
+    "flavours": [
+      "What flavors do you have?",
+      "Show all flavour options",
+      "Chocolate options",
+      "Fruity options",
+      "Nutty options",
+      "Coffee flavors",
+      "Tropical flavors",
+      "What pairs well with vanilla?",
+      "Give me flavor combinations",
+      "Which flavors are best for kids?"
+    ],
+    "recommendations": [
+      "Suggest best sellers",
+      "What should I try first?",
+      "Best recommendation for chocolate lovers",
+      "Best recommendation for fruity taste",
+      "Suggest premium reserve pints",
+      "Give me sweet and salty combo",
+      "Recommend 4-pack selection",
+      "Recommend 6-pack family mix",
+      "Recommend for party order",
+      "Suggest weekly subscription bundle"
+    ],
+    "builder": [
+      "How does Build Your Box work?",
+      "How many pints can I add?",
+      "Difference between 4-pack 6-pack 8-pack",
+      "How many flavors per product in bundle?",
+      "Can I mix duplicate products?",
+      "Can I select base and flavors manually?",
+      "Why is Add Bundle disabled?",
+      "How to edit bundle before checkout",
+      "Can I add bundle directly to cart?",
+      "Is there subscription discount in builder?"
+    ],
+    "cartCheckout": [
+      "How do I add to cart?",
+      "How to update quantity?",
+      "Can I remove items from cart?",
+      "How is tax calculated?",
+      "How much is shipping?",
+      "How to apply coupon code?",
+      "What is SAVE10?",
+      "How checkout works step by step",
+      "One-time vs subscription at checkout",
+      "Can I preview order before paying?"
+    ],
+    "ordersTracking": [
+      "How do I track my order?",
+      "Where do I find order history?",
+      "What are order statuses?",
+      "How long until delivery?",
+      "Can I track with order ID?",
+      "My order is not showing",
+      "Can I reorder from past order?",
+      "What is in tracking timeline?",
+      "Can guest users track orders?",
+      "How to contact support for delayed order?"
+    ],
+    "wishlistAccount": [
+      "How does wishlist work?",
+      "Do I need login for wishlist?",
+      "How to remove from wishlist?",
+      "How to sign up?",
+      "How to sign in?",
+      "I forgot password what to do?",
+      "How to sign out?",
+      "Can I save address for future orders?",
+      "Can I use account for subscriptions?",
+      "Can admin account place orders too?"
+    ],
+    "shippingSupport": [
+      "How is ice cream packed for shipping?",
+      "Do you deliver same day?",
+      "Shipping charges",
+      "Delivery timeline",
+      "Do you use cold chain packaging?",
+      "Can I contact support by phone?",
+      "Support email",
+      "Where is your kitchen located?",
+      "Do you support bulk/event orders?",
+      "How fast support replies?"
+    ],
+    "adminSeo": [
+      "How admin manages products?",
+      "How admin updates order status?",
+      "How admin creates users?",
+      "How admin edits SEO settings?",
+      "How product SEO overrides work?",
+      "Who can access admin dashboard?",
+      "Can manager access admin pages?",
+      "How to add product images from assets?",
+      "How to update product-level keywords?",
+      "How to sign in as admin?"
+    ],
+    "errorsAndIssues": [
+      "I cannot add to cart",
+      "Cart item disappeared",
+      "Checkout redirects to login",
+      "Wishlist not saving",
+      "Order not found in tracking",
+      "Coupon not applied",
+      "Product unavailable",
+      "Delivery issue / melted item",
+      "Payment or confirmation issue",
+      "Need refund or replacement"
+    ]
+  },
+  "bestSuggestionRules": {
+    "chocolate_lover": [
+      "Midnight Cocoa Swirl Pint",
+      "Cherry Chocolate Noir Pint",
+      "Mocha Brownie Batter Pint",
+      "Caramel Coffee Crunch Pint"
+    ],
+    "fruity_refreshing": [
+      "Mango Coconut Cloud Pint",
+      "Vanilla Berry Ripple Pint",
+      "Lemon Basil Sorbet Pint",
+      "Passionfruit Yogurt Pint"
+    ],
+    "nutty_premium": [
+      "Pistachio Honey Crunch Pint",
+      "Hazelnut Praline Pint",
+      "Black Sesame Honey Pint",
+      "Salted Maple Pecan Pint"
+    ],
+    "balanced_first_timer": [
+      "Vanilla Berry Ripple Pint",
+      "Cookie Butter Dream Pint",
+      "Blueberry Cheesecake Pint",
+      "Banoffee Pie Pint"
+    ],
+    "exotic_adventurous": [
+      "Rose Pistachio Kulfi Pint",
+      "Black Sesame Honey Pint",
+      "Strawberry Matcha Velvet Pint",
+      "Lemon Basil Sorbet Pint"
+    ],
+    "coffee_caramel": [
+      "Caramel Coffee Crunch Pint",
+      "Mocha Brownie Batter Pint",
+      "Salted Maple Pecan Pint"
+    ],
+    "premium_reserve_only": [
+      "Pistachio Honey Crunch Pint",
+      "Caramel Coffee Crunch Pint",
+      "Hazelnut Praline Pint",
+      "Cherry Chocolate Noir Pint",
+      "Mocha Brownie Batter Pint",
+      "Black Sesame Honey Pint"
+    ],
+    "seasonal_only": [
+      "Mango Coconut Cloud Pint",
+      "Lemon Basil Sorbet Pint",
+      "Passionfruit Yogurt Pint",
+      "Rose Pistachio Kulfi Pint"
+    ]
+  },
+  "recommendedBundles": {
+    "4_pack_first_order": [
+      "Vanilla Berry Ripple Pint",
+      "Cookie Butter Dream Pint",
+      "Mango Coconut Cloud Pint",
+      "Midnight Cocoa Swirl Pint"
+    ],
+    "6_pack_family_mix": [
+      "Vanilla Berry Ripple Pint",
+      "Blueberry Cheesecake Pint",
+      "Banoffee Pie Pint",
+      "Mango Coconut Cloud Pint",
+      "Pistachio Honey Crunch Pint",
+      "Cherry Chocolate Noir Pint"
+    ],
+    "8_pack_party": [
+      "Midnight Cocoa Swirl Pint",
+      "Blueberry Cheesecake Pint",
+      "Mango Coconut Cloud Pint",
+      "Strawberry Matcha Velvet Pint",
+      "Caramel Coffee Crunch Pint",
+      "Hazelnut Praline Pint",
+      "Lemon Basil Sorbet Pint",
+      "Cookie Butter Dream Pint"
+    ],
+    "weekly_subscription_smart": [
+      "Vanilla Berry Ripple Pint",
+      "Salted Maple Pecan Pint",
+      "Passionfruit Yogurt Pint",
+      "Mocha Brownie Batter Pint"
+    ]
+  },
+  "chatbotPromptButtonsCurrent": [
+    "What flavours do you have available?",
+    "Show me your products",
+    "How do I track my order?",
+    "How does shipping work?",
+    "How do subscriptions work in checkout?",
+    "How can admin manage product SEO tags? (admin only)"
+  ],
+  "integrationNotes": {
+    "currentChatbotSource": "public/js/script.js",
+    "chatbotType": "client-side NLP (tokenization + synonym expansion + overlap scoring)",
+    "productSourceNow": "Scraped from current page DOM (not globally fetched from API)",
+    "improvement": "Use this JSON as centralized data source and load globally in chatbot to answer with full catalog on any page."
+  }
+}

@@ -7,35 +7,80 @@ function wantsJson(req) {
   return req.xhr || accept.includes('application/json');
 }
 
+async function buildCartSummary(cartInput) {
+  const cart = Array.isArray(cartInput) ? cartInput : [];
+  const cartItems = [];
+  let subtotal = 0;
+
+  for (let i = 0; i < cart.length; i += 1) {
+    const item = cart[i];
+    const product = await Product.findById(item.productId);
+    if (product) {
+      const itemTotal = product.price * item.quantity;
+      subtotal += itemTotal;
+      cartItems.push({
+        product,
+        quantity: item.quantity,
+        itemTotal,
+        itemIndex: i,
+        selectedFlavours: item.selectedFlavours || [],
+        scoopCount: Number(item.scoopCount) || 0
+      });
+    }
+  }
+
+  const tax = subtotal * 0.08;
+  const shipping = subtotal > 0 ? 5.99 : 0;
+  const total = subtotal + tax + shipping;
+  const cartCount = cart.reduce((sum, row) => sum + (Number(row.quantity) || 0), 0);
+
+  return { cartItems, subtotal, tax, shipping, total, cartCount };
+}
+
 router.get('/', async (req, res) => {
   try {
-    const cart = req.session.cart || [];
-    const cartItems = [];
-    let total = 0;
-
-    for (let i = 0; i < cart.length; i += 1) {
-      const item = cart[i];
-      const product = await Product.findById(item.productId);
-      if (product) {
-        const itemTotal = product.price * item.quantity;
-        total += itemTotal;
-        cartItems.push({ product, quantity: item.quantity, itemTotal, itemIndex: i, selectedFlavours: item.selectedFlavours || [], scoopCount: Number(item.scoopCount) || 0 });
-      }
-    }
+    const summary = await buildCartSummary(req.session.cart || []);
 
     res.render('cart', {
       title: 'Your Cart | ScoopCraft',
-      cartItems,
-      subtotal: total,
-      tax: total * 0.08,
-      shipping: total > 0 ? 5.99 : 0,
-      total: total + (total * 0.08) + (total > 0 ? 5.99 : 0)
+      cartItems: summary.cartItems,
+      subtotal: summary.subtotal,
+      tax: summary.tax,
+      shipping: summary.shipping,
+      total: summary.total
     });
   } catch (error) {
     console.error('Error loading cart:', error);
     res.status(500).render('404', {
       title: 'Error | ScoopCraft'
     });
+  }
+});
+
+router.get('/summary', async (req, res) => {
+  try {
+    const summary = await buildCartSummary(req.session.cart || []);
+    res.json({
+      success: true,
+      cartCount: summary.cartCount,
+      subtotal: summary.subtotal,
+      tax: summary.tax,
+      shipping: summary.shipping,
+      total: summary.total,
+      items: summary.cartItems.map((item) => ({
+        id: String(item.product._id),
+        name: item.product.name,
+        image: item.product.image,
+        price: Number(item.product.price || 0),
+        quantity: Number(item.quantity || 0),
+        itemTotal: Number(item.itemTotal || 0),
+        selectedFlavours: item.selectedFlavours || [],
+        scoopCount: Number(item.scoopCount) || 0
+      }))
+    });
+  } catch (error) {
+    console.error('Error loading cart summary:', error);
+    res.status(500).json({ success: false, error: 'Failed to load cart summary' });
   }
 });
 

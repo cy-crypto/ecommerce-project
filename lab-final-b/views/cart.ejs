@@ -2,25 +2,19 @@
 
 <section class="cart-page">
   <div class="container">
-    <h1 class="page-title">Your Cart</h1>
-    <p class="page-subtitle">Review your custom pints, confirm quantities, and continue with secure checkout.</p>
-
-    <div class="trust-row top-gap center-cta">
-      <span class="trust-chip">🔒 Secure Session Checkout</span>
-      <span class="trust-chip">📊 Transparent Tax & Shipping</span>
-      <span class="trust-chip">🧾 Live Order Preview</span>
-    </div>
+    <h1 class="page-title sc-animate" data-animate="fade-up">🛒 Your Cart</h1>
+    <p class="page-subtitle sc-animate" data-animate="fade-up">Review your custom pints, confirm quantities, and continue with secure checkout.</p>
 
     <% if (!cartItems || cartItems.length === 0) { %>
-      <div class="cart-empty">
+      <div class="cart-empty sc-animate" data-animate="zoom-in">
         <div class="cart-empty-icon">🧁</div>
         <h2>Your cart is empty</h2>
         <p>Start adding your favorite pints and custom flavour mixes.</p>
-        <a href="/products" class="btn-primary">Browse Products</a>
+        <a href="/products" class="btn-primary btn-glow">Browse Products</a>
       </div>
     <% } else { %>
       <div class="cart-layout">
-        <div class="cart-items-panel">
+        <div class="cart-items-panel sc-animate" data-animate="fade-right">
           <table class="data-table cart-table">
             <thead>
               <tr>
@@ -46,10 +40,10 @@
                       <input type="hidden" name="productId" value="<%= item.product._id %>" />
                       <input type="hidden" name="itemIndex" value="<%= item.itemIndex %>" />
                       <input type="number" name="quantity" min="1" value="<%= item.quantity %>" />
-                      <button type="submit" class="btn-outline">Update</button>
+                      <button type="submit" class="btn-outline btn-sm">Update</button>
                     </form>
                   </td>
-                  <td>$<%= item.itemTotal.toFixed(2) %></td>
+                  <td><strong>$<%= item.itemTotal.toFixed(2) %></strong></td>
                   <td>
                     <form action="/cart/remove" method="POST" class="inline-form">
                       <input type="hidden" name="productId" value="<%= item.product._id %>" />
@@ -63,24 +57,31 @@
           </table>
         </div>
 
-        <aside class="cart-summary-card">
-          <h2>Order Total</h2>
-          <p><span>Subtotal</span> <strong>$<%= subtotal.toFixed(2) %></strong></p>
-          <p><span>Tax</span> <strong>$<%= tax.toFixed(2) %></strong></p>
-          <p><span>Shipping</span> <strong>$<%= shipping.toFixed(2) %></strong></p>
-          <hr />
-          <p class="total-row"><span>Total</span> <strong>$<%= total.toFixed(2) %></strong></p>
-          <a href="/checkout" class="btn-primary full-width">Proceed to Checkout</a>
+        <aside class="cart-summary-card-v2 sc-animate" data-animate="fade-left">
+          <div class="cart-summary-header">
+            <h2>💰 Order Total <button type="button" class="info-icon-btn info-trigger" data-info-title="Order Total" data-info-body="Order total includes subtotal, tax, and shipping based on your current cart contents.">i</button></h2>
+          </div>
+          <div class="cart-summary-rows">
+            <p><span>Subtotal</span> <strong>$<%= subtotal.toFixed(2) %></strong></p>
+            <p><span>Tax (8%)</span> <strong>$<%= tax.toFixed(2) %></strong></p>
+            <p><span>Shipping</span> <strong>$<%= shipping.toFixed(2) %></strong></p>
+          </div>
+          <div class="cart-summary-divider"></div>
+          <p class="cart-total-row"><span>Total</span> <strong class="cart-total-amount">$<%= total.toFixed(2) %></strong></p>
+          <a href="/checkout" class="btn-primary btn-glow full-width cart-checkout-btn">🔒 Proceed to Checkout</a>
           <form action="/cart/clear" method="POST" class="inline-form full-width-form">
             <button type="submit" class="btn-outline full-width">Clear Cart</button>
           </form>
-          <p class="muted top-gap">Tip: Signed-in users can track all placed orders from My Orders.</p>
+          <div class="cart-summary-note">
+            <span>💡</span>
+            <p class="muted">Signed-in users can track all placed orders from My Orders.</p>
+          </div>
         </aside>
       </div>
 
       <div class="builder-grid top-gap">
-        <article class="builder-card">
-          <h2>Checkout Readiness Checklist</h2>
+        <article class="builder-card sc-animate" data-animate="fade-up">
+          <h2>✅ Checkout Readiness</h2>
           <ul class="tick-list">
             <li>Verify quantity and customization choices</li>
             <li>Confirm shipping information in checkout</li>
@@ -88,22 +89,10 @@
             <li>Apply coupon code during checkout if available</li>
           </ul>
         </article>
-        <article class="builder-card">
-          <h2>Need More Choices?</h2>
+        <article class="builder-card sc-animate" data-animate="fade-up" data-delay="100">
+          <h2>🛍️ Need More Choices?</h2>
           <p>Continue shopping to add more flavor combinations before finalizing your order.</p>
           <a href="/products" class="btn-outline">Continue Shopping</a>
-        </article>
-      </div>
-
-      <div class="builder-grid top-gap">
-        <article class="builder-card">
-          <h2>Cart FAQ</h2>
-          <p><strong>Can I update quantity?</strong><br />Yes, change quantity and click update directly in the cart table.</p>
-          <p><strong>Can I remove a custom item?</strong><br />Yes, remove uses product plus item index to remove exact customization.</p>
-        </article>
-        <article class="builder-card">
-          <h2>Professional Order Flow</h2>
-          <p>Cart -> Checkout -> Preview -> Place Order -> Track status in your signed-in account.</p>
         </article>
       </div>
     <% } %>

@@ -20,7 +20,8 @@ function extractFlavourHighlights(products) {
       highlights.push({
         name: flavour.name,
         note: flavour.note || 'Signature scoop profile',
-        color: flavour.color || '#ffe5c2'
+        color: flavour.color || '#ffe5c2',
+        detail: `${flavour.name} is crafted as a premium layer with ${flavour.note || 'a balanced creamy profile'}. It pairs well in both one-time and subscription pint builds.`
       });
 
       if (highlights.length >= 10) {
@@ -205,6 +206,43 @@ router.get('/my-orders', requireAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('Error loading orders:', error);
+    res.status(500).render('404', {
+      title: 'Error | ScoopCraft'
+    });
+  }
+});
+
+router.get('/track-order', requireAuth, async (req, res) => {
+  try {
+    const queryOrderId = String(req.query.orderId || '').trim();
+    let trackedOrder = null;
+    let trackError = '';
+
+    if (queryOrderId) {
+      trackedOrder = await Order.findOne({
+        _id: queryOrderId,
+        user: req.session.userId
+      }).lean();
+
+      if (!trackedOrder) {
+        trackError = 'No order found for this ID in your account.';
+      }
+    }
+
+    const recentOrders = await Order.find({ user: req.session.userId })
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .lean();
+
+    res.render('track-order', {
+      title: 'Track Order | ScoopCraft',
+      trackedOrder,
+      queryOrderId,
+      trackError,
+      recentOrders
+    });
+  } catch (error) {
+    console.error('Error loading track order page:', error);
     res.status(500).render('404', {
       title: 'Error | ScoopCraft'
     });

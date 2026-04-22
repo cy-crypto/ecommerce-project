@@ -1,0 +1,127 @@
+<%- include('partials/header') %>
+
+<section class="checkout-page track-order-page">
+  <div class="container">
+    <h1 class="page-title sc-animate" data-animate="fade-up">Track Your Order</h1>
+    <p class="page-subtitle sc-animate" data-animate="fade-up">Enter your order ID to view the latest tracking timeline and status updates.</p>
+
+    <div class="checkout-grid">
+      <article class="checkout-form-card track-search-card sc-animate" data-animate="fade-up">
+        <div class="track-search-header">
+          <span class="track-search-icon">📦</span>
+          <h2>Find Your Order</h2>
+        </div>
+        <form method="GET" action="/track-order" class="checkout-form">
+          <label>Order ID
+            <input type="text" name="orderId" value="<%= queryOrderId || '' %>" placeholder="Paste your order ID here..." required />
+          </label>
+          <button type="submit" class="btn-primary btn-glow">🔍 Track Now</button>
+        </form>
+        <% if (trackError) { %>
+          <div class="track-error-banner top-gap">
+            <span>⚠️</span> <%= trackError %>
+          </div>
+        <% } %>
+      </article>
+
+      <article class="checkout-summary-card recent-orders-card sc-animate" data-animate="fade-up" data-delay="100">
+        <h2>📋 Recent Orders</h2>
+        <% if (recentOrders && recentOrders.length) { %>
+          <% recentOrders.forEach(order => { %>
+            <div class="recent-order-item">
+              <div class="recent-order-header">
+                <span class="recent-order-id" title="<%= order._id %>"><%= String(order._id).slice(-8) %>...</span>
+                <span class="order-status-badge status-<%= String(order.status).toLowerCase() %>"><%= order.status %></span>
+              </div>
+              <p class="muted summary-flavours">Placed: <%= new Date(order.createdAt).toLocaleString() %></p>
+              <a href="/track-order?orderId=<%= order._id %>" class="btn-outline btn-sm">Track This Order</a>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="track-empty-state">
+            <span>🕐</span>
+            <p class="muted">No recent orders to track yet. Place an order to start tracking!</p>
+            <a href="/products" class="btn-outline btn-sm">Browse Products</a>
+          </div>
+        <% } %>
+      </article>
+    </div>
+
+    <% if (trackedOrder) { %>
+      <div class="track-result-section sc-animate" data-animate="fade-up">
+        <article class="track-result-card">
+          <div class="track-result-header">
+            <div>
+              <h2>Order #<%= String(trackedOrder._id).slice(-8) %></h2>
+              <p class="muted">Full ID: <%= trackedOrder._id %></p>
+            </div>
+            <span class="order-status-badge status-<%= String(trackedOrder.status).toLowerCase() %> large"><%= trackedOrder.status %></span>
+          </div>
+
+          <div class="track-meta-row">
+            <div class="track-meta-item">
+              <span class="track-meta-label">Total</span>
+              <strong>$<%= Number(trackedOrder.total || 0).toFixed(2) %></strong>
+            </div>
+            <div class="track-meta-item">
+              <span class="track-meta-label">Placed</span>
+              <strong><%= new Date(trackedOrder.createdAt).toLocaleDateString() %></strong>
+            </div>
+            <div class="track-meta-item">
+              <span class="track-meta-label">Items</span>
+              <strong><%= (trackedOrder.items || []).length %></strong>
+            </div>
+          </div>
+
+          <h3 class="top-gap">📍 Order Timeline</h3>
+          <div class="track-timeline">
+            <% 
+              const allStatuses = ['Placed', 'Processing', 'Delivered'];
+              const historyStatuses = (trackedOrder.trackingHistory || []).map(e => e.status);
+            %>
+            <% allStatuses.forEach((status, idx) => { 
+              const event = (trackedOrder.trackingHistory || []).find(e => e.status === status);
+              const isActive = historyStatuses.includes(status);
+              const isCurrent = trackedOrder.status === status;
+            %>
+              <div class="timeline-step <%= isActive ? 'active' : '' %> <%= isCurrent ? 'current' : '' %>">
+                <div class="timeline-dot">
+                  <% if (status === 'Placed') { %>📝<% } %>
+                  <% if (status === 'Processing') { %>⚙️<% } %>
+                  <% if (status === 'Delivered') { %>✅<% } %>
+                </div>
+                <div class="timeline-content">
+                  <strong><%= status %></strong>
+                  <% if (event) { %>
+                    <p class="muted"><%= event.note || 'Status updated' %></p>
+                    <small class="muted"><%= new Date(event.updatedAt).toLocaleString() %></small>
+                  <% } else { %>
+                    <p class="muted">Pending</p>
+                  <% } %>
+                </div>
+              </div>
+              <% if (idx < allStatuses.length - 1) { %>
+                <div class="timeline-connector <%= isActive && historyStatuses.includes(allStatuses[idx + 1]) ? 'active' : '' %>"></div>
+              <% } %>
+            <% }) %>
+          </div>
+
+          <h3 class="top-gap">🛒 Order Items</h3>
+          <div class="track-items-list">
+            <% (trackedOrder.items || []).forEach(item => { %>
+              <div class="track-item-row">
+                <div class="track-item-info">
+                  <strong><%= item.name %></strong>
+                  <span class="muted">x<%= item.quantity %></span>
+                </div>
+                <span class="track-item-price">$<%= Number(item.lineTotal || 0).toFixed(2) %></span>
+              </div>
+            <% }) %>
+          </div>
+        </article>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

@@ -17,12 +17,15 @@
             <p><a href="/auth/signin">Sign In</a></p>
             <p><a href="/auth/signup">Sign Up</a></p>
             <p><a href="/my-orders">My Orders</a></p>
+            <p><a href="/track-order">Track Order</a></p>
           </div>
           <div>
             <h4>Support & Company</h4>
             <p><a href="/about">About</a></p>
             <p><a href="/contact">Contact</a></p>
-            <p><a href="/admin">Admin Dashboard</a></p>
+            <% if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Manager')) { %>
+              <p><a href="/admin">Admin Dashboard</a></p>
+            <% } %>
           </div>
         </div>
         <div class="footer-bottom">
@@ -31,30 +34,94 @@
       </div>
     </footer>
 
-    <button id="chatbotToggle" class="chatbot-toggle" type="button" aria-label="Open chat assistant">Chat</button>
-    <section id="chatbotPanel" class="chatbot-panel" aria-label="ScoopCraft Assistant">
+    <section id="infoPopup" class="info-popup" aria-hidden="true">
+      <div class="info-popup-backdrop" data-close-info-popup></div>
+      <div class="info-popup-card" role="dialog" aria-modal="true" aria-labelledby="infoPopupTitle">
+        <div class="info-popup-head">
+          <h3 id="infoPopupTitle">Details</h3>
+          <button type="button" class="info-popup-close" data-close-info-popup aria-label="Close">x</button>
+        </div>
+        <p id="infoPopupBody">More information will appear here.</p>
+      </div>
+    </section>
+
+    <!-- Flavour Detail Modal -->
+    <section id="flavourDetailModal" class="flavour-detail-modal" aria-hidden="true">
+      <div class="flavour-modal-backdrop" data-close-flavour-modal></div>
+      <div class="flavour-modal-card" role="dialog" aria-modal="true">
+        <div class="flavour-modal-head">
+          <h3 id="flavourModalTitle">Flavour Details</h3>
+          <button type="button" class="flavour-modal-close" data-close-flavour-modal aria-label="Close">×</button>
+        </div>
+        <div class="flavour-modal-body">
+          <div class="flavour-modal-accent" id="flavourModalAccent"></div>
+          <p id="flavourModalBody">Details about this flavour will appear here.</p>
+          <div class="flavour-modal-actions">
+            <a href="/products" class="btn-primary btn-sm">Shop This Flavour</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="cartDrawer" class="cart-drawer" aria-hidden="true">
+      <div class="cart-drawer-backdrop" data-close-cart-drawer></div>
+      <aside class="cart-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="cartDrawerTitle">
+        <header class="cart-drawer-head">
+          <h3 id="cartDrawerTitle">Your Cart</h3>
+          <button id="cartDrawerClose" type="button" class="cart-drawer-close" aria-label="Close cart drawer">×</button>
+        </header>
+        <div id="cartDrawerContent" class="cart-drawer-content">
+          <p class="muted">Your cart is currently empty.</p>
+        </div>
+        <footer class="cart-drawer-foot">
+          <div class="cart-drawer-totals">
+            <p><span>Subtotal</span><strong id="cartDrawerSubtotal">$0.00</strong></p>
+            <p><span>Total</span><strong id="cartDrawerTotal">$0.00</strong></p>
+          </div>
+          <div class="cart-drawer-actions">
+            <a href="/cart" class="btn-outline">View Cart</a>
+            <a href="/checkout" class="btn-primary">Checkout</a>
+          </div>
+        </footer>
+      </aside>
+    </section>
+
+    <button id="chatbotToggle" class="chatbot-toggle" type="button" aria-label="Open chat assistant">
+      <span class="chatbot-toggle-icon">💬</span>
+      <span class="chatbot-toggle-text">Chat</span>
+    </button>
+    <section
+      id="chatbotPanel"
+      class="chatbot-panel"
+      aria-label="ScoopCraft Assistant"
+      data-user-role="<%= currentUser ? currentUser.role : 'Guest' %>"
+      data-user-name="<%= currentUser ? currentUser.name : '' %>"
+      data-user-signedin="<%= currentUser ? 'true' : 'false' %>"
+    >
       <header class="chatbot-header">
         <div>
-          <strong>ScoopCraft Assistant</strong>
-          <p>Ask about wishlist, checkout, flavours, and orders.</p>
+          <strong>🍨 ScoopCraft Assistant</strong>
+          <p>Ask about flavours, products, orders, and more.</p>
         </div>
         <button id="chatbotClose" type="button" class="chatbot-close" aria-label="Close chat">×</button>
       </header>
       <div id="chatbotBody" class="chatbot-body">
         <div class="chatbot-msg bot">
-          <p>Hello! Need help with products, wishlist, cart, or checkout?</p>
+          <p>Hello! 👋 I'm your ScoopCraft assistant. Ask me anything about our products, flavours, ordering, or tracking!</p>
         </div>
       </div>
       <div class="chatbot-prompts">
-        <button type="button" class="chatbot-prompt" data-question="What flavours do you recommend for chocolate lovers?">Flavor Picks</button>
-        <button type="button" class="chatbot-prompt" data-question="How does wishlist work for signed in users?">Wishlist Help</button>
-        <button type="button" class="chatbot-prompt" data-question="Explain shipping and delivery options">Shipping</button>
-        <button type="button" class="chatbot-prompt" data-question="How do subscriptions work in checkout?">Subscriptions</button>
-        <button type="button" class="chatbot-prompt" data-question="How can admin manage product SEO tags?">Admin SEO</button>
-        <button type="button" class="chatbot-prompt" data-question="How can I track my order status?">Track Orders</button>
+        <button type="button" class="chatbot-prompt" data-question="What flavours do you have available?">🍦 Flavours</button>
+        <button type="button" class="chatbot-prompt" data-question="Show me your products">🛍️ Products</button>
+        <button type="button" class="chatbot-prompt" data-action="track-order" data-question="How do I track my order?">📦 Track Order</button>
+        <button type="button" class="chatbot-prompt" data-question="How does shipping work?">🚚 Shipping</button>
+        <button type="button" class="chatbot-prompt" data-question="How do subscriptions work in checkout?">🔄 Subscriptions</button>
+        <% if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Manager')) { %>
+          <button type="button" class="chatbot-prompt" data-question="How can admin manage product SEO tags?">⚙️ Admin SEO</button>
+        <% } %>
       </div>
       <form id="chatbotForm" class="chatbot-form">
-        <input id="chatbotInput" type="text" placeholder="Type your question..." autocomplete="off" />
+        <input id="chatbotInput" type="text" placeholder="Ask me anything about ScoopCraft..." autocomplete="off" />
         <button type="submit">Send</button>
       </form>
     </section>
@@ -62,5 +129,3 @@
     <script src="/js/script.js"></script>
   </body>
 </html>
-
-

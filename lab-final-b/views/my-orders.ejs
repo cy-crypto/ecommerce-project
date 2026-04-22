@@ -15,6 +15,7 @@
         <p>Plan: <strong><%= order.plan === 'subscription' ? 'Weekly Subscription' : 'One-Time Order' %></strong></p>
         <p>Total: $<%= order.total.toFixed(2) %></p>
         <p>Placed: <%= new Date(order.createdAt).toLocaleString() %></p>
+        <p><a href="/track-order?orderId=<%= order._id %>" class="btn-outline">Track This Order</a></p>
         <details>
           <summary>Items</summary>
           <ul>

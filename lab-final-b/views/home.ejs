@@ -1,8 +1,22 @@
 <%- include('partials/header') %>
 
+<section class="home-video-hero">
+  <video class="home-video-hero__media" autoplay muted loop playsinline preload="metadata" poster="/assets/main-section-imge.jpg" aria-label="ScoopCraft featured video">
+    <source src="/assets/main-section-video.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+  <div class="home-video-hero__overlay" aria-hidden="true"></div>
+  <div class="home-video-hero__content">
+    <span class="home-video-hero__kicker">Freshly Churned Daily</span>
+    <h1>Design your custom pint in minutes.</h1>
+    <p>Pick your layers, place the order, and get artisan ice cream delivered cold and fast.</p>
+  </div>
+  <a href="/products" class="btn-primary home-video-hero__cta">Explore Products</a>
+</section>
+
 <section class="hero-icecream">
   <div class="container hero-grid">
-    <div>
+    <div class="hero-content-col sc-animate" data-animate="fade-right">
       <span class="kicker">Custom Ice Cream Pints</span>
       <h1>Craft your dream pint with chef-curated layers and doorstep delivery.</h1>
       <p>
@@ -10,21 +24,13 @@
         Build 3-layer classics or 4-layer deluxe pints, then choose one-time delivery or subscription.
       </p>
       <div class="hero-actions">
-        <a href="/products" class="btn-primary">Build My Pint</a>
+        <a href="/products" class="btn-primary btn-glow">Build My Pint</a>
         <a href="/checkout" class="btn-outline">Start Secure Checkout</a>
       </div>
-      <div class="hero-metrics">
-        <div><strong>24h</strong><span>Fresh Churned</span></div>
-        <div><strong><%= totalFlavours || 0 %></strong><span>Available Flavours</span></div>
-        <div><strong><%= totalProducts || 0 %></strong><span>Live Products</span></div>
-      </div>
-      <div class="trust-row top-gap">
-        <span class="trust-chip">🍨 Premium Ingredients</span>
-        <span class="trust-chip">🚚 Cold-Chain Delivery</span>
-        <span class="trust-chip">🔒 Secure Checkout</span>
-      </div>
+
     </div>
-    <div class="hero-visual">
+    <div class="hero-visual sc-animate" data-animate="fade-left">
+      <img src="/assets/main-section-imge.jpg" alt="ScoopCraft hero pint showcase" class="hero-banner-image" />
       <div class="pint-card">
         <h3>Signature Stack of The Week</h3>
         <p><%= signatureStack || 'Add flavour options in dashboard to build your live signature stack.' %></p>
@@ -33,90 +39,129 @@
   </div>
 </section>
 
-<section class="value-pillars">
-  <div class="container">
-    <h2 class="section-title">Built Like a Professional Food Brand</h2>
-    <div class="icon-grid">
-      <article class="icon-card">
-        <span class="icon-circle">🥛</span>
-        <h3>Farm Fresh Inputs</h3>
-        <p>We source dairy and mix-ins from quality suppliers with consistent batch standards.</p>
+<section class="flavour-marquee" aria-label="Featured flavour visuals">
+  <div class="flavour-marquee__viewport">
+    <div class="flavour-marquee__track">
+      <article class="flavour-marquee__item">
+        <img src="/assets/swet.png" alt="Atom flavour visual" loading="lazy" />
+        <span>Atom</span>
       </article>
-      <article class="icon-card">
-        <span class="icon-circle">🧪</span>
-        <h3>Flavor Engineering</h3>
-        <p>Every product supports modular flavour options, making each purchase truly personalized.</p>
+            <article class="flavour-marquee__item">
+        <img src="/assets/fresh.png" alt="Atom flavour visual" loading="lazy" />
+        <span>Atom</span>
       </article>
-      <article class="icon-card">
-        <span class="icon-circle">📈</span>
-        <h3>Conversion Focused</h3>
-        <p>Guided product cards, quick cart actions, and frictionless checkout improve order completion.</p>
+      <article class="flavour-marquee__item">
+        <img src="/assets/swirl.png" alt="Swirl flavour visual" loading="lazy" />
+        <span>Swirl</span>
       </article>
-      <article class="icon-card">
-        <span class="icon-circle">🛡️</span>
-        <h3>SEO + Trust Ready</h3>
-        <p>On-page SEO metadata, canonical links, and secure headers are active across storefront pages.</p>
+      <article class="flavour-marquee__item">
+        <img src="/assets/yum.png" alt="Yum flavour visual" loading="lazy" />
+        <span>Yum</span>
+      </article>
+      <article class="flavour-marquee__item">
+        <img src="/assets/icy.png" alt="Atom flavour visual" loading="lazy" />
+        <span>Atom</span>
+      </article>
+
+      <article class="flavour-marquee__item" aria-hidden="true">
+        <img src="/assets/swirl.png" alt="" loading="lazy" />
+        <span>Swirl</span>
+      </article>
+      <article class="flavour-marquee__item" aria-hidden="true">
+        <img src="/assets/yum.png" alt="" loading="lazy" />
+        <span>Yum</span>
       </article>
     </div>
   </div>
 </section>
 
-<section class="flavour-showcase">
-  <div class="container">
-    <h2 class="section-title">Featured Flavours</h2>
-    <% if (flavours && flavours.length) { %>
-      <div class="flavour-grid">
-        <% flavours.forEach(flavour => { %>
-          <article class="flavour-card" style="--flavour-accent:<%= flavour.color %>">
-            <h3><%= flavour.name %></h3>
-            <p><%= flavour.note %></p>
-          </article>
-        <% }) %>
-      </div>
-    <% } else { %>
-      <article class="builder-card">
-        <h3>No flavour options published yet</h3>
-        <p>Add flavour options in admin products and they will appear here automatically from live DB.</p>
-      </article>
-    <% } %>
+<section class="nitrogen-process">
+  <div class="container nitrogen-process__grid">
+    <div class="nitrogen-process__content">
+      <h2>Our Nitrogen Process</h2>
+      <p>
+        We use liquid nitrogen to flash-freeze every order, resulting in a velvety texture and unparalleled creaminess.
+        This rapid freezing process locks in both freshness and flavor, delivering a pint of ice cream that offers a dessert experience like no other.
+      </p>
+      <a href="/products" class="btn-primary">Order Now</a>
+    </div>
+    <div class="nitrogen-process__media">
+      <video autoplay muted loop playsinline preload="metadata" poster="/assets/main-section-imge.jpg" aria-label="Our nitrogen process video">
+        <source src="/assets/our%20nitrogen%20process.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
   </div>
 </section>
 
-<section class="conversion-band">
-  <div class="container conversion-grid">
-    <article>
-      <h2>Why Customers Convert on ScoopCraft</h2>
-      <p>Our storefront is designed for confidence from discovery to payment with clear options at every step.</p>
-      <ul class="tick-list">
-        <li>Clear product detail and customization controls</li>
-        <li>Live cart pricing with tax and shipping transparency</li>
-        <li>Checkout profile support for fast repeat orders</li>
-        <li>Wishlist and order tracking for signed-in users</li>
-      </ul>
-    </article>
-    <article class="builder-card">
-      <h3>Fast Path to Purchase</h3>
-      <p>Discover → Customize → Cart → Checkout → Track in My Orders.</p>
-      <a href="/products" class="btn-primary">Shop Products</a>
-    </article>
+
+<section class="flavour-showcase home-flavour-slider" aria-label="Signature flavour highlights">
+  <div class="container">
+    <h2 class="section-title sc-animate" data-animate="fade-up">Signature Flavours</h2>
+    <p class="page-subtitle sc-animate" data-animate="fade-up">Browse our showcase picks.</p>
+
+    <div class="home-flavour-slider__shell sc-animate" data-animate="fade-up" data-delay="80" id="homeFlavourSlider">
+      <div class="home-flavour-slider__viewport">
+        <div class="home-flavour-slider__track">
+          <article class="home-flavour-slide is-active" data-slide="0">
+            <a href="/products/69d4baeafb7457e176e1a6f8" class="home-flavour-slide__link" aria-label="Open product page">
+              <img src="/assets/pista-homepage.jpg" alt="Pista home flavour" />
+              <span>View Product</span>
+            </a>
+          </article>
+          <article class="home-flavour-slide" data-slide="1">
+            <a href="/products/69d4baeafb7457e176e1a6f5" class="home-flavour-slide__link" aria-label="Open product page">
+              <img src="/assets/yellow-cream-homepage.webp" alt="Yellow cream home flavour" />
+              <span>View Product</span>
+            </a>
+          </article>
+          <article class="home-flavour-slide" data-slide="2">
+            <a href="/products/69d4be3bbea7ebcf1328a6d4" class="home-flavour-slide__link" aria-label="Open product page">
+              <img src="/assets/custard-homepage.webp" alt="Custard home flavour" />
+              <span>View Product</span>
+            </a>
+          </article>
+          <article class="home-flavour-slide" data-slide="3">
+            <a href="/products/69d4be3bbea7ebcf1328a6d1" class="home-flavour-slide__link" aria-label="Open product page">
+              <img src="/assets/chocolate-homepage.webp" alt="Chocolate home flavour" />
+              <span>View Product</span>
+            </a>
+          </article>
+          <article class="home-flavour-slide" data-slide="4">
+            <a href="/products/69d4baeafb7457e176e1a6fb" class="home-flavour-slide__link" aria-label="Open product page">
+              <img src="/assets/straw-homepage.jpg" alt="Strawberry home flavour" />
+              <span>View Product</span>
+            </a>
+          </article>
+        </div>
+      </div>
+
+      <button type="button" class="home-flavour-slider__arrow home-flavour-slider__arrow--prev" aria-label="Previous slide">&#10094;</button>
+      <button type="button" class="home-flavour-slider__arrow home-flavour-slider__arrow--next" aria-label="Next slide">&#10095;</button>
+
+      <div class="home-flavour-slider__dots" role="tablist" aria-label="Flavour slides"></div>
+    </div>
   </div>
 </section>
 
 <section class="catalog-showcase">
   <div class="container">
-    <h2 class="section-title">Explore Pint Collection</h2>
-    <p class="page-subtitle">Pick from <%= totalProducts || 0 %> live products and customize each scoop profile before checkout.</p>
-    <div class="products-grid">
+    <h2 class="section-title sc-animate" data-animate="fade-up">Explore Pint Collection</h2>
+    <!-- <p class="page-subtitle sc-animate" data-animate="fade-up">Pick from 4 live products and customize each scoop profile before checkout.</p> -->
+    <div class="products-grid featured-products-grid">
       <% if (featuredProducts && featuredProducts.length) { %>
-        <% featuredProducts.forEach(product => { %>
-          <article class="product-card">
+        <% featuredProducts.slice(0, 4).forEach((product, idx) => { %>
+          <article class="product-card product-card-clickable sc-animate" data-animate="fade-up" data-delay="<%= idx * 80 %>" data-href="/products/<%= product._id %>" tabindex="0" role="link" aria-label="Open <%= product.name %>">
             <img src="<%= product.image %>" alt="<%= product.name %>" class="product-image" />
             <h3><%= product.name %></h3>
-            <p><%= product.shortDescription || product.description %></p>
-            <p><strong>$<%= Number(product.price || 0).toFixed(2) %></strong></p>
+            <p class="product-card__desc"><%= product.shortDescription || product.description %></p>
+            <p class="product-price"><strong>$<%= Number(product.price || 0).toFixed(2) %></strong></p>
             <a href="/products/<%= product._id %>" class="btn-primary">Customize</a>
           </article>
         <% }) %>
+        <div class="shop-all-wrap sc-animate" data-animate="fade-up" data-delay="120">
+          <a href="/products" class="btn-primary btn-glow">Shop All</a>
+        </div>
       <% } else { %>
         <article class="builder-card">
           <h3>Catalog is warming up</h3>
@@ -128,50 +173,53 @@
   </div>
 </section>
 
-<section class="build-steps">
+<section class="faq-section">
   <div class="container">
-    <h2 class="section-title">How Ordering Works</h2>
-    <div class="steps-wrap">
-      <div class="step-item">
-        <span>1</span>
-        <h3>Browse Catalog</h3>
-        <p>Find your perfect base pint from live products managed in the admin dashboard.</p>
-      </div>
-      <div class="step-item">
-        <span>2</span>
-        <h3>Customize Flavour Layers</h3>
-        <p>Pick exactly 3 or 4 flavour layers with validation built directly into product detail pages.</p>
-      </div>
-      <div class="step-item">
-        <span>3</span>
-        <h3>Checkout and Track</h3>
-        <p>Confirm plan, shipping, and payment details, then monitor order status after sign in.</p>
-      </div>
-      <div class="step-item">
-        <span>4</span>
-        <h3>Admin Updates Go Live</h3>
-        <p>Any product or SEO update from dashboard reflects automatically on storefront pages.</p>
-      </div>
-    </div>
-    <div class="center-cta">
-      <a href="/products" class="btn-primary">Start Building Your Pint</a>
+    <h2 class="section-title sc-animate" data-animate="fade-up">Frequently Asked Questions</h2>
+    <div class="faq-accordion">
+      <details class="faq-item sc-animate" data-animate="fade-up" data-delay="0">
+        <summary>How do I build a custom pint?</summary>
+        <div class="faq-answer">
+          <p>Open the products page, choose your pint, and select your flavour layers. You can create 3-layer classics or 4-layer deluxe combinations before adding to cart.</p>
+        </div>
+      </details>
+      <details class="faq-item sc-animate" data-animate="fade-up" data-delay="100">
+        <summary>How is delivery handled so the ice cream stays fresh?</summary>
+        <div class="faq-answer">
+          <p>Every order is packed using cold-chain safe packaging designed to maintain texture and temperature from our kitchen to your doorstep.</p>
+        </div>
+      </details>
+      <details class="faq-item sc-animate" data-animate="fade-up" data-delay="200">
+        <summary>Can I place one-time orders and subscriptions?</summary>
+        <div class="faq-answer">
+          <p>Yes. At checkout you can select either one-time delivery or a subscription plan, depending on how often you want fresh pints delivered.</p>
+        </div>
+      </details>
+      <details class="faq-item sc-animate" data-animate="fade-up" data-delay="300">
+        <summary>How do I track my order after purchase?</summary>
+        <div class="faq-answer">
+          <p>After placing an order, sign in and open My Orders or Track Order to view live status updates and delivery progress.</p>
+        </div>
+      </details>
     </div>
   </div>
 </section>
-
 <section class="social-proof">
   <div class="container">
-    <h2 class="section-title">Loved by Dessert Fans</h2>
+    <h2 class="section-title sc-animate" data-animate="fade-up">Loved by Dessert Fans</h2>
     <div class="icon-grid">
-      <article class="icon-card">
+      <article class="icon-card sc-animate" data-animate="fade-up" data-delay="0">
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
         <p>"The custom flavour flow is smooth, and checkout feels very premium."</p>
         <strong>- Priya, Weekly Subscriber</strong>
       </article>
-      <article class="icon-card">
+      <article class="icon-card sc-animate" data-animate="fade-up" data-delay="100">
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
         <p>"I can track every order and quickly reorder from my account. Super practical."</p>
         <strong>- Ahmed, Returning Customer</strong>
       </article>
-      <article class="icon-card">
+      <article class="icon-card sc-animate" data-animate="fade-up" data-delay="200">
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
         <p>"As an admin, changing product SEO and details instantly updates the live storefront."</p>
         <strong>- Store Manager</strong>
       </article>
@@ -179,30 +227,6 @@
   </div>
 </section>
 
-<section class="faq-section">
-  <div class="container">
-    <h2 class="section-title">Frequently Asked Questions</h2>
-    <div class="builder-grid">
-      <article class="builder-card">
-        <h3>Do dashboard product edits reflect on the website?</h3>
-        <p>Yes. Product CRUD from the admin panel updates live listings and detail pages automatically.</p>
-      </article>
-      <article class="builder-card">
-        <h3>Can I set SEO tags per product?</h3>
-        <p>Yes. Admin product forms include SEO title, description, keywords, robots, and canonical fields.</p>
-      </article>
-      <article class="builder-card">
-        <h3>Is checkout secure?</h3>
-        <p>Security headers are enabled through Helmet and the checkout flow uses authenticated sessions.</p>
-      </article>
-      <article class="builder-card">
-        <h3>What can signed-in users manage?</h3>
-        <p>Signin users can manage wishlist, cart, checkout, order history, and order tracking pages.</p>
-      </article>
-    </div>
-  </div>
-</section>
+
 
 <%- include('partials/footer') %>
-
-
