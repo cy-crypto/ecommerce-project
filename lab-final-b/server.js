@@ -19,13 +19,30 @@ app.set('trust proxy', 1);
 
 // MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/scoopcraft-store';
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-  });
+
+async function connectToMongoWithRetry(maxAttempts = 6) {
+  let attempt = 0;
+
+  while (attempt < maxAttempts) {
+    attempt += 1;
+    try {
+      await mongoose.connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 15000
+      });
+      console.log('Connected to MongoDB');
+      return;
+    } catch (err) {
+      const message = err && err.message ? err.message : String(err);
+      console.error(`MongoDB connection attempt ${attempt}/${maxAttempts} failed: ${message}`);
+
+      if (attempt >= maxAttempts) {
+        throw err;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+  }
+}
 
 // View engine setup
 app.set('view engine', 'ejs');
@@ -512,8 +529,19 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`ScoopCraft Pints running at http://localhost:${PORT}`);
-});
+async function startServer() {
+  try {
+    await connectToMongoWithRetry();
+    app.listen(PORT, () => {
+      console.log(`ScoopCraft Pints running at http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    const message = error && error.message ? error.message : String(error);
+    console.error(`Fatal startup error. Could not connect to MongoDB: ${message}`);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 
