@@ -12,7 +12,10 @@ const { loadCurrentUser } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3004;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyDcCuQ9HLLLn80Tnohl0M7tFweW7AQT9lY';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+
+// Render (and similar hosts) terminate TLS at a proxy.
+app.set('trust proxy', 1);
 
 // MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/scoopcraft-store';
@@ -38,7 +41,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
     }
   })
 );
