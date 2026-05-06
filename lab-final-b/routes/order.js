@@ -149,6 +149,16 @@ router.post('/confirm', requireAuth, async (req, res) => {
     }
 
     await order.save();
+
+    // Update product stock when order is confirmed
+    for (const item of pending.cartItems) {
+      await Product.findByIdAndUpdate(
+        item.productId,
+        { $inc: { stock: -item.quantity } },
+        { new: true }
+      );
+    }
+
     req.session.cart = [];
     req.session.pendingOrder = null;
 
