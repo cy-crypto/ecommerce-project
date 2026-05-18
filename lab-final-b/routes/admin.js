@@ -255,43 +255,25 @@ router.post('/products/seo-generate', async (req, res) => {
     const name = String(req.body?.name || '').trim();
     const description = String(req.body?.description || '').trim();
     const shortDescription = String(req.body?.shortDescription || '').trim();
-    const price = String(req.body?.price || '').trim();
-    const rarity = String(req.body?.rarity || 'Signature').trim();
     const category = String(req.body?.category || 'Ice Cream').trim();
-    const flavourOptions = Array.isArray(req.body?.flavourOptions)
-      ? req.body.flavourOptions.map((item) => String(item || '').trim()).filter(Boolean)
-      : String(req.body?.flavourOptions || '')
-          .split(',')
-          .map((item) => item.trim())
-          .filter(Boolean);
 
     if (!name || !description) {
       return res.status(400).json({ success: false, error: 'Name and description are required.' });
     }
 
     const prompt = [
-      'Generate SEO metadata in STRICT JSON format.',
-      '',
-      'Return ONLY valid JSON.',
-      'Do not add markdown.',
-      'Do not add explanations.',
-      'Do not add text before or after JSON.',
-      '',
+      'Return ONLY valid JSON. No markdown. No explanations.',
       'Required structure:',
       '{',
       '  "title": "",',
       '  "metaDescription": "",',
       '  "keywords": []',
       '}',
-      '',
-      'User Input:',
+      'Product data:',
       `Name: ${name}`,
-      `Description: ${description}`,
       shortDescription ? `Short description: ${shortDescription}` : '',
-      price ? `Price: ${price}` : '',
-      rarity ? `Rarity: ${rarity}` : '',
-      category ? `Category: ${category}` : '',
-      flavourOptions.length ? `Flavours: ${flavourOptions.join(', ')}` : ''
+      `Description: ${description}`,
+      `Category: ${category}`
     ]
       .filter(Boolean)
       .join('\n');
@@ -307,11 +289,15 @@ router.post('/products/seo-generate', async (req, res) => {
           generationConfig: {
             temperature: 0.2,
             topP: 0.8,
-            maxOutputTokens: 512,
+            maxOutputTokens: 120,
             responseMimeType: 'application/json'
           }
         })
       });
+
+      if (geminiResponse.status === 429) {
+        return { ok: false, quotaExceeded: true };
+      }
 
       if (!geminiResponse.ok) {
         const errorText = await geminiResponse.text();
@@ -319,13 +305,15 @@ router.post('/products/seo-generate', async (req, res) => {
       }
 
       const payload = await geminiResponse.json();
-      const parts = payload?.candidates?.[0]?.content?.parts;
-      const raw = Array.isArray(parts) ? parts.map((part) => String(part?.text || '')).join('\n').trim() : '';
+      const raw = payload?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       return { ok: true, raw, payload };
     }
 
     const response = await requestSeoJson();
     if (!response.ok) {
+      if (response.quotaExceeded) {
+        return res.status(429).json({ success: false, error: 'Gemini quota exceeded.' });
+      }
       return res.status(502).json({
         success: false,
         error: 'AI request failed.',
