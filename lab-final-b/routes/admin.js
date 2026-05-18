@@ -297,7 +297,12 @@ router.post('/products/seo-generate', async (req, res) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.6, topP: 0.9, maxOutputTokens: 220 }
+        generationConfig: {
+          temperature: 0.6,
+          topP: 0.9,
+          maxOutputTokens: 220,
+          responseMimeType: 'application/json'
+        }
       })
     });
 
@@ -318,7 +323,17 @@ router.post('/products/seo-generate', async (req, res) => {
     try {
       seo = JSON.parse(raw);
     } catch (parseError) {
-      return res.status(422).json({ success: false, error: 'AI response was not valid JSON.' });
+      const start = raw.indexOf('{');
+      const end = raw.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        try {
+          seo = JSON.parse(raw.slice(start, end + 1));
+        } catch (innerError) {
+          return res.status(422).json({ success: false, error: 'AI response was not valid JSON.' });
+        }
+      } else {
+        return res.status(422).json({ success: false, error: 'AI response was not valid JSON.' });
+      }
     }
 
     return res.json({
