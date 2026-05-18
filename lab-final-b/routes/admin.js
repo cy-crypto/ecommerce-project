@@ -308,8 +308,7 @@ router.post('/products/seo-generate', async (req, res) => {
             temperature: 0.2,
             topP: 0.8,
             maxOutputTokens: 512,
-            responseMimeType: 'application/json',
-            thinking: { include: false }
+            responseMimeType: 'application/json'
           }
         })
       });
