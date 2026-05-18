@@ -138,6 +138,13 @@
       return;
     }
 
+    const stock = Number(form.getAttribute('data-stock') || 0);
+    const addButton = document.getElementById('addToCartBtn');
+    if (stock <= 0 && addButton) {
+      addButton.disabled = true;
+      addButton.textContent = 'Out of Stock';
+    }
+
     form.addEventListener('submit', function (event) {
       event.preventDefault();
       const productId = form.getAttribute('data-product-id');
@@ -758,15 +765,16 @@
 
       productCards.forEach((card) => {
         const qty = getQty(card);
+        const outOfStock = Number(card.getAttribute('data-stock') || 0) <= 0;
         const decreaseBtn = card.querySelector('.box-qty-btn[data-action="decrease"]');
         const increaseBtn = card.querySelector('.box-qty-btn[data-action="increase"]');
 
         if (decreaseBtn) {
-          decreaseBtn.disabled = qty <= 0 || isSubmitting;
+          decreaseBtn.disabled = outOfStock || qty <= 0 || isSubmitting;
         }
 
         if (increaseBtn) {
-          increaseBtn.disabled = selected >= required || isSubmitting;
+          increaseBtn.disabled = outOfStock || selected >= required || isSubmitting;
         }
       });
 
@@ -974,6 +982,10 @@
 
       const card = btn.closest('[data-box-product]');
       if (!card) {
+        return;
+      }
+
+      if (Number(card.getAttribute('data-stock') || 0) <= 0) {
         return;
       }
 

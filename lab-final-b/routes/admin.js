@@ -8,6 +8,8 @@ const User = require('../models/User');
 const SeoSetting = require('../models/SeoSetting');
 const { requireAdmin } = require('../middleware/auth');
 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+
 function parseFlavourOptions(rawInput) {
   const lines = String(rawInput || '')
     .split('\n')
@@ -241,6 +243,97 @@ router.post('/products', async (req, res) => {
       title: 'Error | Admin',
       message: 'Failed to create product'
     });
+  }
+});
+
+router.post('/products/seo-generate', async (req, res) => {
+  try {
+    if (!GEMINI_API_KEY) {
+      return res.status(503).json({ success: false, error: 'AI service is not configured.' });
+    }
+
+    const name = String(req.body?.name || '').trim();
+    const description = String(req.body?.description || '').trim();
+    const shortDescription = String(req.body?.shortDescription || '').trim();
+    const price = String(req.body?.price || '').trim();
+    const rarity = String(req.body?.rarity || 'Signature').trim();
+    const category = String(req.body?.category || 'Ice Cream').trim();
+    const flavourOptions = Array.isArray(req.body?.flavourOptions)
+      ? req.body.flavourOptions.map((item) => String(item || '').trim()).filter(Boolean)
+      : String(req.body?.flavourOptions || '')
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean);
+
+    if (!name || !description) {
+      return res.status(400).json({ success: false, error: 'Name and description are required.' });
+    }
+
+    const prompt = [
+      'You are an SEO assistant for an e-commerce ice cream store.',
+      'Generate product SEO metadata as strict JSON with keys:',
+      'seoTitle, seoDescription, seoKeywords, metaRobots, canonicalUrl.',
+      'Rules:',
+      '- seoTitle <= 60 characters.',
+      '- seoDescription 150-160 characters.',
+      '- seoKeywords is a comma-separated list (6-10 items).',
+      '- metaRobots should be "index, follow".',
+      '- canonicalUrl should be an empty string.',
+      'Use the product info below and mention key flavours if provided.',
+      `Name: ${name}`,
+      `Description: ${description}`,
+      shortDescription ? `Short description: ${shortDescription}` : '',
+      price ? `Price: ${price}` : '',
+      rarity ? `Rarity: ${rarity}` : '',
+      category ? `Category: ${category}` : '',
+      flavourOptions.length ? `Flavours: ${flavourOptions.join(', ')}` : ''
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+    const geminiResponse = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.6, topP: 0.9, maxOutputTokens: 220 }
+      })
+    });
+
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
+      return res.status(502).json({
+        success: false,
+        error: 'AI request failed.',
+        details: errorText.slice(0, 300)
+      });
+    }
+
+    const payload = await geminiResponse.json();
+    const parts = payload?.candidates?.[0]?.content?.parts;
+    const raw = Array.isArray(parts) ? parts.map((part) => String(part?.text || '')).join('\n').trim() : '';
+
+    let seo = null;
+    try {
+      seo = JSON.parse(raw);
+    } catch (parseError) {
+      return res.status(422).json({ success: false, error: 'AI response was not valid JSON.' });
+    }
+
+    return res.json({
+      success: true,
+      seo: {
+        seoTitle: String(seo?.seoTitle || '').trim(),
+        seoDescription: String(seo?.seoDescription || '').trim(),
+        seoKeywords: String(seo?.seoKeywords || '').trim(),
+        metaRobots: String(seo?.metaRobots || 'index, follow').trim(),
+        canonicalUrl: String(seo?.canonicalUrl || '').trim()
+      }
+    });
+  } catch (error) {
+    console.error('Error generating product SEO:', error);
+    return res.status(500).json({ success: false, error: 'Failed to generate SEO data.' });
   }
 });
 

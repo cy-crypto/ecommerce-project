@@ -95,6 +95,7 @@ router.post('/preview', requireAuth, buildOrderContext, applyDiscount, (req, res
 });
 
 router.post('/confirm', requireAuth, async (req, res) => {
+  const updatedProducts = [];
   try {
     const pending = req.session.pendingOrder;
     const user = await User.findById(req.session.userId);
@@ -148,22 +149,46 @@ router.post('/confirm', requireAuth, async (req, res) => {
       await user.save();
     }
 
-    await order.save();
-
-    // Update product stock when order is confirmed
     for (const item of pending.cartItems) {
-      await Product.findByIdAndUpdate(
-        item.productId,
+      const updated = await Product.findOneAndUpdate(
+        { _id: item.productId, stock: { $gte: item.quantity } },
         { $inc: { stock: -item.quantity } },
         { new: true }
       );
+
+      if (!updated) {
+        for (const rollback of updatedProducts) {
+          await Product.findByIdAndUpdate(
+            rollback.productId,
+            { $inc: { stock: rollback.quantity } },
+            { new: true }
+          );
+        }
+
+        req.session.pendingOrder = null;
+        return res.redirect('/cart');
+      }
+
+      updatedProducts.push({ productId: item.productId, quantity: item.quantity });
     }
+
+    await order.save();
 
     req.session.cart = [];
     req.session.pendingOrder = null;
 
     res.redirect(`/order/success/${order._id}`);
   } catch (error) {
+    if (updatedProducts.length > 0) {
+      for (const rollback of updatedProducts) {
+        await Product.findByIdAndUpdate(
+          rollback.productId,
+          { $inc: { stock: rollback.quantity } },
+          { new: true }
+        );
+      }
+    }
+
     console.error('Error confirming order:', error);
     res.status(500).render('404', {
       title: 'Error | ScoopCraft'

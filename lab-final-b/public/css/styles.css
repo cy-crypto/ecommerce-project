@@ -948,6 +948,14 @@ a {
     transform: none;
 }
 
+.btn-primary.is-out-of-stock[disabled] {
+    opacity: 0.75;
+    background: linear-gradient(135deg, #f2d7d7, #f5caca);
+    border-color: #e3b7b7;
+    color: #8a2f2f;
+    box-shadow: none;
+}
+
 .builder-form label {
     display: block;
     font-weight: 700;
@@ -3818,6 +3826,10 @@ textarea {
 
 .btn-glow:hover::after {
     opacity: 1;
+}
+
+.btn-glow.is-out-of-stock[disabled]::after {
+    opacity: 0;
 }
 
 .btn-sm {

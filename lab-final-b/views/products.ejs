@@ -46,14 +46,17 @@
               <div class="box-products-grid">
                 <% if (products && products.length) { %>
                   <% products.forEach(product => { %>
-                    <article class="box-product-card" data-box-product data-product-id="<%= product._id %>" data-price="<%= Number(product.price || 0) %>" data-flavours="<%= (product.flavourOptions || []).map(item => item.name).join('|') %>" data-flavour-details="<%= encodeURIComponent(JSON.stringify((product.flavourOptions || []).map(item => ({ name: item.name, note: item.note || '', color: item.color || '#ffe5c2' })))) %>">
+                    <article class="box-product-card <%= Number(product.stock || 0) <= 0 ? 'is-out-of-stock' : '' %>" data-box-product data-product-id="<%= product._id %>" data-price="<%= Number(product.price || 0) %>" data-stock="<%= Number(product.stock || 0) %>" data-flavours="<%= (product.flavourOptions || []).map(item => item.name).join('|') %>" data-flavour-details="<%= encodeURIComponent(JSON.stringify((product.flavourOptions || []).map(item => ({ name: item.name, note: item.note || '', color: item.color || '#ffe5c2' })))) %>">
                       <img src="<%= product.image %>" alt="<%= product.name %>" class="box-product-image" />
                       <h4><%= product.name %></h4>
                       <p>$<%= Number(product.price || 0).toFixed(2) %></p>
+                      <% if (Number(product.stock || 0) <= 0) { %>
+                        <p class="box-stock-note">Out of stock</p>
+                      <% } %>
                       <div class="box-qty-control">
-                        <button type="button" class="box-qty-btn" data-action="decrease" aria-label="Decrease quantity">-</button>
+                        <button type="button" class="box-qty-btn" data-action="decrease" aria-label="Decrease quantity" <%= Number(product.stock || 0) <= 0 ? 'disabled' : '' %> title="<%= Number(product.stock || 0) <= 0 ? 'Out of stock' : 'Decrease quantity' %>">-</button>
                         <input type="text" value="0" class="box-qty-input" readonly data-qty-input />
-                        <button type="button" class="box-qty-btn" data-action="increase" aria-label="Increase quantity">+</button>
+                        <button type="button" class="box-qty-btn" data-action="increase" aria-label="Increase quantity" <%= Number(product.stock || 0) <= 0 ? 'disabled' : '' %> title="<%= Number(product.stock || 0) <= 0 ? 'Out of stock' : 'Increase quantity' %>">+</button>
                       </div>
                     </article>
                   <% }) %>

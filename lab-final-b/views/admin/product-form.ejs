@@ -33,9 +33,83 @@
     <label>Meta Robots <input type="text" name="metaRobots" value="<%= product ? (product.metaRobots || 'index, follow') : 'index, follow' %>" /></label>
     <label>Canonical URL <input type="url" name="canonicalUrl" value="<%= product ? (product.canonicalUrl || '') : '' %>" /></label>
 
+    <button type="button" id="aiSeoBtn" class="admin-btn">Auto Generate Product SEO Data with AI</button>
+    <p id="aiSeoStatus" class="muted"></p>
+
     <button type="submit" class="admin-btn"><%= submitText %></button>
   </form>
 </section>
+
+<script>
+  (function () {
+    const button = document.getElementById('aiSeoBtn');
+    const status = document.getElementById('aiSeoStatus');
+    const form = document.querySelector('.admin-form');
+
+    if (!button || !form) {
+      return;
+    }
+
+    function setStatus(message, isError) {
+      if (!status) {
+        return;
+      }
+      status.textContent = message || '';
+      status.style.color = isError ? '#b33636' : '#1d7f45';
+    }
+
+    button.addEventListener('click', function () {
+      const payload = {
+        name: form.querySelector('input[name="name"]')?.value || '',
+        description: form.querySelector('textarea[name="description"]')?.value || '',
+        shortDescription: form.querySelector('input[name="shortDescription"]')?.value || '',
+        price: form.querySelector('input[name="price"]')?.value || '',
+        rarity: 'Signature',
+        category: '',
+        flavourOptions: form.querySelector('textarea[name="flavourOptions"]')?.value || ''
+      };
+
+      button.disabled = true;
+      button.textContent = 'Generating...';
+      setStatus('Generating SEO fields with AI...', false);
+
+      fetch('/admin/products/seo-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data || !data.success) {
+            setStatus(data?.error || 'Could not generate SEO data.', true);
+            return;
+          }
+
+          const seo = data.seo || {};
+          const titleInput = form.querySelector('input[name="seoTitle"]');
+          const descInput = form.querySelector('textarea[name="seoDescription"]');
+          const keywordsInput = form.querySelector('input[name="seoKeywords"]');
+          const robotsInput = form.querySelector('input[name="metaRobots"]');
+          const canonicalInput = form.querySelector('input[name="canonicalUrl"]');
+
+          if (titleInput) titleInput.value = seo.seoTitle || '';
+          if (descInput) descInput.value = seo.seoDescription || '';
+          if (keywordsInput) keywordsInput.value = seo.seoKeywords || '';
+          if (robotsInput) robotsInput.value = seo.metaRobots || 'index, follow';
+          if (canonicalInput) canonicalInput.value = seo.canonicalUrl || '';
+
+          setStatus('SEO fields updated. Save the product to apply changes.', false);
+        })
+        .catch(() => {
+          setStatus('Could not generate SEO data.', true);
+        })
+        .finally(() => {
+          button.disabled = false;
+          button.textContent = 'Auto Generate Product SEO Data with AI';
+        });
+    });
+  })();
+</script>
 
 <%- include('partials/footer') %>
 

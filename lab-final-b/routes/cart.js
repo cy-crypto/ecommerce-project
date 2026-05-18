@@ -96,6 +96,10 @@ router.post('/add', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
+    if (Number(product.stock) <= 0) {
+      return res.status(409).json({ error: 'Product is out of stock' });
+    }
+
     const cart = req.session.cart || [];
     const selectedFlavoursRaw = req.body.selectedFlavours;
     const selectedFlavours = Array.isArray(selectedFlavoursRaw)
@@ -121,12 +125,27 @@ router.post('/add', async (req, res) => {
       return itemKey === cartItemKey;
     });
 
+    const requestedQty = parseInt(quantity, 10) || 0;
+    const existingQty = existingItemIndex > -1 ? Number(cart[existingItemIndex].quantity) || 0 : 0;
+    const desiredQty = existingQty + requestedQty;
+
+    if (desiredQty <= 0) {
+      return res.status(400).json({ error: 'Quantity must be at least 1' });
+    }
+
+    if (desiredQty > Number(product.stock)) {
+      return res.status(409).json({
+        error: 'Requested quantity exceeds available stock',
+        availableStock: Number(product.stock)
+      });
+    }
+
     if (existingItemIndex > -1) {
-      cart[existingItemIndex].quantity += parseInt(quantity, 10);
+      cart[existingItemIndex].quantity = desiredQty;
     } else {
       cart.push({
         productId,
-        quantity: parseInt(quantity, 10),
+        quantity: desiredQty,
         selectedFlavours,
         scoopCount: normalizedScoopCount
       });
@@ -141,7 +160,7 @@ router.post('/add', async (req, res) => {
   }
 });
 
-router.post('/update', (req, res) => {
+router.post('/update', async (req, res) => {
   try {
     const { productId, quantity, itemIndex } = req.body;
     if (quantity === undefined) {
@@ -154,10 +173,23 @@ router.post('/update', (req, res) => {
       : cart.findIndex(item => item.productId.toString() === String(productId));
 
     if (resolvedIndex > -1 && resolvedIndex < cart.length) {
-      if (parseInt(quantity, 10) <= 0) {
+      const normalizedQty = parseInt(quantity, 10);
+      if (normalizedQty <= 0) {
         cart.splice(resolvedIndex, 1);
       } else {
-        cart[resolvedIndex].quantity = parseInt(quantity, 10);
+        const product = await Product.findById(cart[resolvedIndex].productId);
+        if (!product) {
+          return res.status(404).json({ error: 'Product not found' });
+        }
+
+        if (normalizedQty > Number(product.stock)) {
+          return res.status(409).json({
+            error: 'Requested quantity exceeds available stock',
+            availableStock: Number(product.stock)
+          });
+        }
+
+        cart[resolvedIndex].quantity = normalizedQty;
       }
     }
 
