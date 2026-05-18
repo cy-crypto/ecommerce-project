@@ -271,7 +271,7 @@ router.post('/products/seo-generate', async (req, res) => {
 
     const prompt = [
       'You are an SEO assistant for an e-commerce ice cream store.',
-      'Generate product SEO metadata as strict JSON with keys:',
+      'Return ONLY a JSON object (no markdown, no extra text) with keys:',
       'seoTitle, seoDescription, seoKeywords, metaRobots, canonicalUrl.',
       'Rules:',
       '- seoTitle <= 60 characters.',
@@ -298,7 +298,7 @@ router.post('/products/seo-generate', async (req, res) => {
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.6,
+          temperature: 0.2,
           topP: 0.9,
           maxOutputTokens: 220,
           responseMimeType: 'application/json'
@@ -320,20 +320,40 @@ router.post('/products/seo-generate', async (req, res) => {
     const raw = Array.isArray(parts) ? parts.map((part) => String(part?.text || '')).join('\n').trim() : '';
 
     let seo = null;
-    try {
-      seo = JSON.parse(raw);
-    } catch (parseError) {
-      const start = raw.indexOf('{');
-      const end = raw.lastIndexOf('}');
-      if (start >= 0 && end > start) {
-        try {
-          seo = JSON.parse(raw.slice(start, end + 1));
-        } catch (innerError) {
-          return res.status(422).json({ success: false, error: 'AI response was not valid JSON.' });
-        }
-      } else {
-        return res.status(422).json({ success: false, error: 'AI response was not valid JSON.' });
+    const cleaned = raw
+      .replace(/```json/gi, '```')
+      .replace(/```/g, '')
+      .trim();
+    const candidates = [cleaned];
+
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      candidates.push(cleaned.slice(start, end + 1));
+    }
+
+    for (const candidate of candidates) {
+      if (!candidate) {
+        continue;
       }
+
+      try {
+        seo = JSON.parse(candidate);
+        break;
+      } catch (parseError) {
+        const repaired = candidate.replace(/,\s*([}\]])/g, '$1');
+        try {
+          seo = JSON.parse(repaired);
+          break;
+        } catch (repairError) {
+          seo = null;
+        }
+      }
+    }
+
+    if (!seo) {
+      console.error('AI SEO raw response:', raw.slice(0, 500));
+      return res.status(422).json({ success: false, error: 'AI response was not valid JSON.' });
     }
 
     return res.json({
