@@ -296,7 +296,7 @@ router.post('/products/seo-generate', async (req, res) => {
       .filter(Boolean)
       .join('\n');
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
 
     async function requestSeoJson() {
       const geminiResponse = await fetch(geminiUrl, {
@@ -307,8 +307,9 @@ router.post('/products/seo-generate', async (req, res) => {
           generationConfig: {
             temperature: 0.2,
             topP: 0.8,
-            maxOutputTokens: 300,
-            responseMimeType: 'application/json'
+            maxOutputTokens: 512,
+            responseMimeType: 'application/json',
+            thinking: { include: false }
           }
         })
       });
