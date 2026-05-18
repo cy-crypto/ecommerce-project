@@ -18,15 +18,19 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 app.set('trust proxy', 1);
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/scoopcraft-store';
+const MONGODB_URL = process.env.MONGODB_URL || '';
 
 async function connectToMongoWithRetry(maxAttempts = 6) {
+  if (!MONGODB_URL) {
+    throw new Error('MONGODB_URL is not set.');
+  }
+
   let attempt = 0;
 
   while (attempt < maxAttempts) {
     attempt += 1;
     try {
-      await mongoose.connect(MONGODB_URI, {
+      await mongoose.connect(MONGODB_URL, {
         serverSelectionTimeoutMS: 15000
       });
       console.log('Connected to MongoDB');
