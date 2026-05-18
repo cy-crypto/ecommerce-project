@@ -269,17 +269,22 @@ router.post('/products/seo-generate', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Name and description are required.' });
     }
 
-    const basePrompt = [
-      'You are an SEO assistant for an e-commerce ice cream store.',
-      'Return ONLY a JSON object (no markdown, no extra text) with keys:',
-      'seoTitle, seoDescription, seoKeywords, metaRobots, canonicalUrl.',
-      'Rules:',
-      '- seoTitle <= 60 characters.',
-      '- seoDescription 150-160 characters.',
-      '- seoKeywords is a comma-separated list (6-10 items).',
-      '- metaRobots should be "index, follow".',
-      '- canonicalUrl should be an empty string.',
-      'Use the product info below and mention key flavours if provided.',
+    const prompt = [
+      'Generate SEO metadata in STRICT JSON format.',
+      '',
+      'Return ONLY valid JSON.',
+      'Do not add markdown.',
+      'Do not add explanations.',
+      'Do not add text before or after JSON.',
+      '',
+      'Required structure:',
+      '{',
+      '  "title": "",',
+      '  "metaDescription": "",',
+      '  "keywords": []',
+      '}',
+      '',
+      'User Input:',
       `Name: ${name}`,
       `Description: ${description}`,
       shortDescription ? `Short description: ${shortDescription}` : '',
@@ -291,20 +296,18 @@ router.post('/products/seo-generate', async (req, res) => {
       .filter(Boolean)
       .join('\n');
 
-    const strictPrompt = `${basePrompt}\n\nIMPORTANT: Output JSON only. Do not add any preface or explanation.`;
-
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
 
-    async function requestSeoJson(promptText) {
+    async function requestSeoJson() {
       const geminiResponse = await fetch(geminiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: promptText }] }],
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.2,
-            topP: 0.9,
-            maxOutputTokens: 220,
+            topP: 0.8,
+            maxOutputTokens: 300,
             responseMimeType: 'application/json'
           }
         })
@@ -321,103 +324,36 @@ router.post('/products/seo-generate', async (req, res) => {
       return { ok: true, raw };
     }
 
-    const firstAttempt = await requestSeoJson(basePrompt);
-    if (!firstAttempt.ok) {
+    const response = await requestSeoJson();
+    if (!response.ok) {
       return res.status(502).json({
         success: false,
         error: 'AI request failed.',
-        details: firstAttempt.errorText.slice(0, 300)
+        details: response.errorText.slice(0, 300)
       });
     }
 
-    let raw = firstAttempt.raw;
-
+    const rawText = response.raw;
     let seo = null;
-    const cleaned = raw
-      .replace(/```json/gi, '```')
-      .replace(/```/g, '')
-      .trim();
-    const candidates = [cleaned];
-
-    const start = cleaned.indexOf('{');
-    const end = cleaned.lastIndexOf('}');
-    if (start >= 0 && end > start) {
-      candidates.push(cleaned.slice(start, end + 1));
-    }
-
-    for (const candidate of candidates) {
-      if (!candidate) {
-        continue;
-      }
-
-      try {
-        seo = JSON.parse(candidate);
-        break;
-      } catch (parseError) {
-        const repaired = candidate.replace(/,\s*([}\]])/g, '$1');
-        try {
-          seo = JSON.parse(repaired);
-          break;
-        } catch (repairError) {
-          seo = null;
-        }
-      }
-    }
-
-    if (!seo) {
-      const secondAttempt = await requestSeoJson(strictPrompt);
-      if (!secondAttempt.ok) {
-        return res.status(502).json({
-          success: false,
-          error: 'AI request failed.',
-          details: secondAttempt.errorText.slice(0, 300)
-        });
-      }
-
-      raw = secondAttempt.raw;
-      const cleanedRetry = raw
-        .replace(/```json/gi, '```')
-        .replace(/```/g, '')
-        .trim();
-      const retryCandidates = [cleanedRetry];
-      const retryStart = cleanedRetry.indexOf('{');
-      const retryEnd = cleanedRetry.lastIndexOf('}');
-      if (retryStart >= 0 && retryEnd > retryStart) {
-        retryCandidates.push(cleanedRetry.slice(retryStart, retryEnd + 1));
-      }
-
-      for (const candidate of retryCandidates) {
-        if (!candidate) {
-          continue;
-        }
-        try {
-          seo = JSON.parse(candidate);
-          break;
-        } catch (parseError) {
-          const repaired = candidate.replace(/,\s*([}\]])/g, '$1');
-          try {
-            seo = JSON.parse(repaired);
-            break;
-          } catch (repairError) {
-            seo = null;
-          }
-        }
-      }
-    }
-
-    if (!seo) {
-      console.error('AI SEO raw response:', raw.slice(0, 500));
+    try {
+      seo = JSON.parse(rawText);
+    } catch (err) {
+      console.error('AI SEO raw response:', rawText.slice(0, 500));
       return res.status(422).json({ success: false, error: 'AI response was not valid JSON.' });
     }
+
+    const keywords = Array.isArray(seo?.keywords)
+      ? seo.keywords.map((item) => String(item || '').trim()).filter(Boolean)
+      : [];
 
     return res.json({
       success: true,
       seo: {
-        seoTitle: String(seo?.seoTitle || '').trim(),
-        seoDescription: String(seo?.seoDescription || '').trim(),
-        seoKeywords: String(seo?.seoKeywords || '').trim(),
-        metaRobots: String(seo?.metaRobots || 'index, follow').trim(),
-        canonicalUrl: String(seo?.canonicalUrl || '').trim()
+        seoTitle: String(seo?.title || '').trim(),
+        seoDescription: String(seo?.metaDescription || '').trim(),
+        seoKeywords: keywords.join(', '),
+        metaRobots: 'index, follow',
+        canonicalUrl: ''
       }
     });
   } catch (error) {
