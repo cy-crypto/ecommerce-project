@@ -9,6 +9,8 @@ const SeoSetting = require('../models/SeoSetting');
 const { requireAdmin } = require('../middleware/auth');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const seoCache = new Map();
+const SEO_CACHE_TTL_MS = 1000 * 60 * 60;
 
 function parseFlavourOptions(rawInput) {
   const lines = String(rawInput || '')
@@ -257,6 +259,12 @@ router.post('/products/seo-generate', async (req, res) => {
     const shortDescription = String(req.body?.shortDescription || '').trim();
     const category = String(req.body?.category || 'Ice Cream').trim();
 
+    const cacheKey = JSON.stringify({ name, shortDescription, description, category });
+    const cached = seoCache.get(cacheKey);
+    if (cached && (Date.now() - cached.createdAt) < SEO_CACHE_TTL_MS) {
+      return res.json({ success: true, seo: cached.seo, source: 'cache' });
+    }
+
     if (!name || !description) {
       return res.status(400).json({ success: false, error: 'Name and description are required.' });
     }
@@ -337,7 +345,7 @@ router.post('/products/seo-generate', async (req, res) => {
       ? seo.keywords.map((item) => String(item || '').trim()).filter(Boolean)
       : [];
 
-    return res.json({
+    const responseBody = {
       success: true,
       seo: {
         seoTitle: String(seo?.title || '').trim(),
@@ -346,7 +354,10 @@ router.post('/products/seo-generate', async (req, res) => {
         metaRobots: 'index, follow',
         canonicalUrl: ''
       }
-    });
+    };
+
+    seoCache.set(cacheKey, { seo: responseBody.seo, createdAt: Date.now() });
+    return res.json(responseBody);
   } catch (error) {
     console.error('Error generating product SEO:', error);
     return res.status(500).json({ success: false, error: 'Failed to generate SEO data.' });
