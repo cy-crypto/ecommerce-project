@@ -289,7 +289,7 @@ router.post('/products/seo-generate', async (req, res) => {
       .filter(Boolean)
       .join('\n');
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
 
     async function requestSeoJson() {
       const geminiResponse = await fetch(geminiUrl, {
