@@ -4,6 +4,9 @@
   <h1><%= editMode ? 'Edit Product' : 'Add Product' %></h1>
 
   <form method="POST" action="<%= formAction %>" class="admin-form">
+    <% if (product && product._id) { %>
+      <input type="hidden" name="productId" value="<%= product._id %>" />
+    <% } %>
     <label>Name <input type="text" name="name" value="<%= product ? product.name : '' %>" required /></label>
     <label>Price <input type="number" name="price" step="0.01" value="<%= product ? product.price : '' %>" required /></label>
     <label>Image URL <input type="url" name="image" value="<%= product ? product.image : '' %>" /></label>
@@ -60,6 +63,7 @@
 
     button.addEventListener('click', function () {
       const payload = {
+        productId: form.querySelector('input[name="productId"]')?.value || '',
         name: form.querySelector('input[name="name"]')?.value || '',
         description: form.querySelector('textarea[name="description"]')?.value || '',
         shortDescription: form.querySelector('input[name="shortDescription"]')?.value || '',
@@ -99,6 +103,8 @@
           if (canonicalInput) canonicalInput.value = seo.canonicalUrl || '';
 
           setStatus('SEO fields updated. Save the product to apply changes.', false);
+          button.disabled = true;
+          button.textContent = 'SEO Generated';
         })
         .catch(() => {
           setStatus('Could not generate SEO data.', true);

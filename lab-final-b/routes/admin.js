@@ -258,8 +258,11 @@ router.post('/products/seo-generate', async (req, res) => {
     const description = String(req.body?.description || '').trim();
     const shortDescription = String(req.body?.shortDescription || '').trim();
     const category = String(req.body?.category || 'Ice Cream').trim();
+    const productId = String(req.body?.productId || '').trim();
 
-    const cacheKey = JSON.stringify({ name, shortDescription, description, category });
+    const cacheKey = productId
+      ? `product:${productId}`
+      : JSON.stringify({ name, shortDescription, description, category });
     const cached = seoCache.get(cacheKey);
     if (cached && (Date.now() - cached.createdAt) < SEO_CACHE_TTL_MS) {
       return res.json({ success: true, seo: cached.seo, source: 'cache' });
