@@ -9,8 +9,7 @@
     <% } %>
     <label>Name <input type="text" name="name" value="<%= product ? product.name : '' %>" required /></label>
     <label>Price <input type="number" name="price" step="0.01" value="<%= product ? product.price : '' %>" required /></label>
-    <label>Image URL <input type="url" name="image" value="<%= product ? product.image : '' %>" /></label>
-    <label>Or Choose Image From Store
+    <label>Choose Image From Store
       <select name="imageFromStore">
         <option value="">Select image from assets</option>
         <% (storeImages || []).forEach(img => { %>

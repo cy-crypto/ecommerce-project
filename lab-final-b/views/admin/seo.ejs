@@ -12,8 +12,81 @@
     <label>Robots <input type="text" name="robots" value="<%= settings.robots %>" /></label>
     <label>OG Image URL <input type="text" name="ogImage" value="<%= settings.ogImage %>" /></label>
     <label>Twitter Card <input type="text" name="twitterCard" value="<%= settings.twitterCard %>" /></label>
+    <button type="button" id="aiSiteSeoBtn" class="admin-btn">Auto Generate Site SEO with AI</button>
+    <p id="aiSiteSeoStatus" class="muted"></p>
     <button type="submit" class="admin-btn">Save SEO Settings</button>
   </form>
 </section>
+
+<script>
+  (function () {
+    const button = document.getElementById('aiSiteSeoBtn');
+    const status = document.getElementById('aiSiteSeoStatus');
+    const form = document.querySelector('.admin-form');
+
+    if (!button || !form) {
+      return;
+    }
+
+    function setStatus(message, isError) {
+      if (!status) {
+        return;
+      }
+      status.textContent = message || '';
+      status.style.color = isError ? '#b33636' : '#1d7f45';
+    }
+
+    button.addEventListener('click', function () {
+      const payload = {
+        siteTitle: form.querySelector('input[name="siteTitle"]')?.value || '',
+        metaDescription: form.querySelector('textarea[name="metaDescription"]')?.value || '',
+        metaKeywords: form.querySelector('input[name="metaKeywords"]')?.value || '',
+        canonicalBaseUrl: form.querySelector('input[name="canonicalBaseUrl"]')?.value || '',
+        ogImage: form.querySelector('input[name="ogImage"]')?.value || '',
+        twitterCard: form.querySelector('input[name="twitterCard"]')?.value || ''
+      };
+
+      button.disabled = true;
+      button.textContent = 'Generating...';
+      setStatus('Generating site SEO with AI...', false);
+
+      fetch('/admin/seo-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data || !data.success) {
+            setStatus(data?.error || 'Could not generate site SEO data.', true);
+            return;
+          }
+
+          const seo = data.seo || {};
+          const titleInput = form.querySelector('input[name="siteTitle"]');
+          const descInput = form.querySelector('textarea[name="metaDescription"]');
+          const keywordsInput = form.querySelector('input[name="metaKeywords"]');
+          const canonicalInput = form.querySelector('input[name="canonicalBaseUrl"]');
+
+          if (titleInput) titleInput.value = seo.siteTitle || '';
+          if (descInput) descInput.value = seo.metaDescription || '';
+          if (keywordsInput) keywordsInput.value = seo.metaKeywords || '';
+          if (canonicalInput) canonicalInput.value = seo.canonicalBaseUrl || '';
+
+          setStatus('Site SEO fields updated. Save to apply changes.', false);
+          button.disabled = true;
+          button.textContent = 'SEO Generated';
+        })
+        .catch(() => {
+          setStatus('Could not generate site SEO data.', true);
+        })
+        .finally(() => {
+          if (!button.disabled) {
+            button.textContent = 'Auto Generate Site SEO with AI';
+          }
+        });
+    });
+  })();
+</script>
 
 <%- include('partials/footer') %>

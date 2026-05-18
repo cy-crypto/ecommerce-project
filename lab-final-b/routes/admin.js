@@ -664,6 +664,99 @@ router.get('/seo', async (req, res) => {
   }
 });
 
+router.post('/seo-generate', async (req, res) => {
+  try {
+    if (!GEMINI_API_KEY) {
+      return res.status(503).json({ success: false, error: 'AI service is not configured.' });
+    }
+
+    const siteTitle = String(req.body?.siteTitle || '').trim();
+    const metaDescription = String(req.body?.metaDescription || '').trim();
+    const metaKeywords = String(req.body?.metaKeywords || '').trim();
+    const canonicalBaseUrl = String(req.body?.canonicalBaseUrl || '').trim();
+    const ogImage = String(req.body?.ogImage || '').trim();
+    const twitterCard = String(req.body?.twitterCard || '').trim();
+
+    const prompt = [
+      'Return ONLY valid JSON. No markdown. No explanations.',
+      'Required structure:',
+      '{',
+      '  "title": "",',
+      '  "metaDescription": "",',
+      '  "keywords": [],',
+      '  "canonicalBaseUrl": ""',
+      '}',
+      'Site data:',
+      siteTitle ? `Site title: ${siteTitle}` : '',
+      metaDescription ? `Meta description: ${metaDescription}` : '',
+      metaKeywords ? `Meta keywords: ${metaKeywords}` : '',
+      canonicalBaseUrl ? `Canonical base URL: ${canonicalBaseUrl}` : '',
+      ogImage ? `OG image: ${ogImage}` : '',
+      twitterCard ? `Twitter card: ${twitterCard}` : ''
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+    const geminiResponse = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.2,
+          topP: 0.8,
+          maxOutputTokens: 220,
+          responseMimeType: 'application/json'
+        }
+      })
+    });
+
+    if (geminiResponse.status === 429) {
+      return res.status(429).json({ success: false, error: 'Gemini quota exceeded.' });
+    }
+
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
+      return res.status(502).json({
+        success: false,
+        error: 'AI request failed.',
+        details: errorText.slice(0, 300)
+      });
+    }
+
+    const payload = await geminiResponse.json();
+    const rawText = payload?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    let seo = null;
+    try {
+      seo = JSON.parse(rawText);
+    } catch (err) {
+      console.error('AI site SEO raw response:', rawText.slice(0, 500));
+      return res.status(422).json({ success: false, error: 'AI response was not valid JSON.' });
+    }
+
+    const keywords = Array.isArray(seo?.keywords)
+      ? seo.keywords.map((item) => String(item || '').trim()).filter(Boolean)
+      : [];
+
+    const fallbackBaseUrl = `${req.protocol}://${req.get('host')}`;
+    const resolvedCanonical = String(seo?.canonicalBaseUrl || '').trim() || canonicalBaseUrl || fallbackBaseUrl;
+
+    return res.json({
+      success: true,
+      seo: {
+        siteTitle: String(seo?.title || '').trim(),
+        metaDescription: String(seo?.metaDescription || '').trim(),
+        metaKeywords: keywords.join(', '),
+        canonicalBaseUrl: resolvedCanonical
+      }
+    });
+  } catch (error) {
+    console.error('Error generating site SEO:', error);
+    return res.status(500).json({ success: false, error: 'Failed to generate SEO data.' });
+  }
+});
+
 router.post('/seo', async (req, res) => {
   try {
     const {
