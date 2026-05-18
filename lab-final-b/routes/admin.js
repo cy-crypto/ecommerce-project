@@ -269,7 +269,7 @@ router.post('/products/seo-generate', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Name and description are required.' });
     }
 
-    const prompt = [
+    const basePrompt = [
       'You are an SEO assistant for an e-commerce ice cream store.',
       'Return ONLY a JSON object (no markdown, no extra text) with keys:',
       'seoTitle, seoDescription, seoKeywords, metaRobots, canonicalUrl.',
@@ -291,33 +291,46 @@ router.post('/products/seo-generate', async (req, res) => {
       .filter(Boolean)
       .join('\n');
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
-    const geminiResponse = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.2,
-          topP: 0.9,
-          maxOutputTokens: 220,
-          responseMimeType: 'application/json'
-        }
-      })
-    });
+    const strictPrompt = `${basePrompt}\n\nIMPORTANT: Output JSON only. Do not add any preface or explanation.`;
 
-    if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+
+    async function requestSeoJson(promptText) {
+      const geminiResponse = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: promptText }] }],
+          generationConfig: {
+            temperature: 0.2,
+            topP: 0.9,
+            maxOutputTokens: 220,
+            responseMimeType: 'application/json'
+          }
+        })
+      });
+
+      if (!geminiResponse.ok) {
+        const errorText = await geminiResponse.text();
+        return { ok: false, errorText };
+      }
+
+      const payload = await geminiResponse.json();
+      const parts = payload?.candidates?.[0]?.content?.parts;
+      const raw = Array.isArray(parts) ? parts.map((part) => String(part?.text || '')).join('\n').trim() : '';
+      return { ok: true, raw };
+    }
+
+    const firstAttempt = await requestSeoJson(basePrompt);
+    if (!firstAttempt.ok) {
       return res.status(502).json({
         success: false,
         error: 'AI request failed.',
-        details: errorText.slice(0, 300)
+        details: firstAttempt.errorText.slice(0, 300)
       });
     }
 
-    const payload = await geminiResponse.json();
-    const parts = payload?.candidates?.[0]?.content?.parts;
-    const raw = Array.isArray(parts) ? parts.map((part) => String(part?.text || '')).join('\n').trim() : '';
+    let raw = firstAttempt.raw;
 
     let seo = null;
     const cleaned = raw
@@ -347,6 +360,47 @@ router.post('/products/seo-generate', async (req, res) => {
           break;
         } catch (repairError) {
           seo = null;
+        }
+      }
+    }
+
+    if (!seo) {
+      const secondAttempt = await requestSeoJson(strictPrompt);
+      if (!secondAttempt.ok) {
+        return res.status(502).json({
+          success: false,
+          error: 'AI request failed.',
+          details: secondAttempt.errorText.slice(0, 300)
+        });
+      }
+
+      raw = secondAttempt.raw;
+      const cleanedRetry = raw
+        .replace(/```json/gi, '```')
+        .replace(/```/g, '')
+        .trim();
+      const retryCandidates = [cleanedRetry];
+      const retryStart = cleanedRetry.indexOf('{');
+      const retryEnd = cleanedRetry.lastIndexOf('}');
+      if (retryStart >= 0 && retryEnd > retryStart) {
+        retryCandidates.push(cleanedRetry.slice(retryStart, retryEnd + 1));
+      }
+
+      for (const candidate of retryCandidates) {
+        if (!candidate) {
+          continue;
+        }
+        try {
+          seo = JSON.parse(candidate);
+          break;
+        } catch (parseError) {
+          const repaired = candidate.replace(/,\s*([}\]])/g, '$1');
+          try {
+            seo = JSON.parse(repaired);
+            break;
+          } catch (repairError) {
+            seo = null;
+          }
         }
       }
     }
