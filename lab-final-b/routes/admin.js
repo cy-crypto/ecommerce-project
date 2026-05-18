@@ -321,7 +321,7 @@ router.post('/products/seo-generate', async (req, res) => {
       const payload = await geminiResponse.json();
       const parts = payload?.candidates?.[0]?.content?.parts;
       const raw = Array.isArray(parts) ? parts.map((part) => String(part?.text || '')).join('\n').trim() : '';
-      return { ok: true, raw };
+      return { ok: true, raw, payload };
     }
 
     const response = await requestSeoJson();
@@ -339,6 +339,9 @@ router.post('/products/seo-generate', async (req, res) => {
       seo = JSON.parse(rawText);
     } catch (err) {
       console.error('AI SEO raw response:', rawText.slice(0, 500));
+      if (response.payload) {
+        console.error('AI SEO payload snapshot:', JSON.stringify(response.payload).slice(0, 1000));
+      }
       return res.status(422).json({ success: false, error: 'AI response was not valid JSON.' });
     }
 
