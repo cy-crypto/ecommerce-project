@@ -33,7 +33,7 @@
     <label>SEO Description <textarea name="seoDescription"><%= product ? (product.seoDescription || '') : '' %></textarea></label>
     <label>SEO Keywords <input type="text" name="seoKeywords" value="<%= product ? (product.seoKeywords || '') : '' %>" /></label>
     <label>Meta Robots <input type="text" name="metaRobots" value="<%= product ? (product.metaRobots || 'index, follow') : 'index, follow' %>" /></label>
-    <label>Canonical URL <input type="url" name="canonicalUrl" value="<%= product ? (product.canonicalUrl || '') : '' %>" /></label>
+    <label>Canonical URL <input type="url" name="canonicalUrl" value="<%= product ? (product.canonicalUrl || '/products') : '/products' %>" /></label>
 
     <button type="button" id="aiSeoBtn" class="admin-btn">Auto Generate Product SEO Data with AI</button>
     <p id="aiSeoStatus" class="muted"></p>
@@ -99,7 +99,7 @@
           if (descInput) descInput.value = seo.seoDescription || '';
           if (keywordsInput) keywordsInput.value = seo.seoKeywords || '';
           if (robotsInput) robotsInput.value = seo.metaRobots || 'index, follow';
-          if (canonicalInput) canonicalInput.value = seo.canonicalUrl || '';
+          if (canonicalInput) canonicalInput.value = seo.canonicalUrl || '/products';
 
           setStatus('SEO fields updated. Save the product to apply changes.', false);
           button.disabled = true;

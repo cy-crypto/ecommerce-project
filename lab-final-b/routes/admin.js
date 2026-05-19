@@ -259,6 +259,8 @@ router.post('/products/seo-generate', async (req, res) => {
     const shortDescription = String(req.body?.shortDescription || '').trim();
     const category = String(req.body?.category || 'Ice Cream').trim();
     const productId = String(req.body?.productId || '').trim();
+    const settings = await SeoSetting.findOne().select('canonicalBaseUrl').lean();
+    const baseUrl = (settings?.canonicalBaseUrl || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
 
     const cacheKey = productId
       ? `product:${productId}`
@@ -348,6 +350,7 @@ router.post('/products/seo-generate', async (req, res) => {
       ? seo.keywords.map((item) => String(item || '').trim()).filter(Boolean)
       : [];
 
+    const canonicalUrl = productId ? `${baseUrl}/products/${productId}` : `${baseUrl}/products`;
     const responseBody = {
       success: true,
       seo: {
@@ -355,7 +358,7 @@ router.post('/products/seo-generate', async (req, res) => {
         seoDescription: String(seo?.metaDescription || '').trim(),
         seoKeywords: keywords.join(', '),
         metaRobots: 'index, follow',
-        canonicalUrl: ''
+        canonicalUrl
       }
     };
 
