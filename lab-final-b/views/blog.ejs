@@ -20,7 +20,7 @@
             <div class="blog-card__body">
               <div class="blog-meta">
                 <span class="blog-tag"><%= post.category %></span>
-                <span class="muted"><%= post.date %> • <%= post.readTime %></span>
+                <span class="muted"><%= post.dateLabel || post.date %> • <%= post.readTime %></span>
               </div>
               <h2><%= post.title %></h2>
               <p><%= post.excerpt %></p>

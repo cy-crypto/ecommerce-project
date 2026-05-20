@@ -9,6 +9,7 @@ const Product = require('./models/Product');
 const Category = require('./models/Category');
 const Order = require('./models/Order');
 const User = require('./models/User');
+const Blog = require('./models/Blog');
 const { loadCurrentUser } = require('./middleware/auth');
 
 const app = express();
@@ -545,7 +546,10 @@ app.get('/sitemap.xml', async (req, res) => {
   try {
     const setting = await SeoSetting.findOne().select('canonicalBaseUrl').lean();
     const baseUrl = (setting?.canonicalBaseUrl || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
-    const products = await Product.find({ isActive: true }).select('_id updatedAt').lean();
+    const [products, blogs] = await Promise.all([
+      Product.find({ isActive: true }).select('_id updatedAt').lean(),
+      Blog.find({ status: 'published' }).select('slug updatedAt').lean()
+    ]);
 
     const urls = [
       ...staticPages.map((page) => ({
@@ -558,6 +562,12 @@ app.get('/sitemap.xml', async (req, res) => {
         lastmod: product.updatedAt ? new Date(product.updatedAt).toISOString() : null,
         changefreq: 'weekly',
         priority: 0.8
+      })),
+      ...blogs.map((blog) => ({
+        loc: `${baseUrl}/blog/${blog.slug}`,
+        lastmod: blog.updatedAt ? new Date(blog.updatedAt).toISOString() : null,
+        changefreq: 'monthly',
+        priority: 0.7
       }))
     ];
 

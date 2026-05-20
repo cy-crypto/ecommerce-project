@@ -1,0 +1,60 @@
+<%- include('partials/header') %>
+
+<section>
+  <div class="admin-page-header">
+    <h1>AI Blog Generator</h1>
+  </div>
+
+  <% if (error) { %>
+    <p class="error-text"><%= error %></p>
+  <% } %>
+
+  <section class="admin-section">
+    <h2>Create a Blog Post</h2>
+    <p class="admin-table-description">Provide a category, title, and image. Add optional notes for tone or focus.</p>
+    <form method="POST" action="/admin/blogs/generate" class="admin-form">
+      <label>Category <input type="text" name="category" placeholder="Custom Pints" required /></label>
+      <label>Title <input type="text" name="title" placeholder="How to build a seasonal pint" required /></label>
+      <label>Image URL
+        <input type="text" name="image" placeholder="/assets/main-section-imge.jpg" />
+      </label>
+      <label>Pick from Store Images
+        <select name="imageFromStore">
+          <option value="">Select image</option>
+          <% (storeImages || []).forEach(image => { %>
+            <option value="<%= image %>"><%= image %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>Optional Notes
+        <textarea name="notes" placeholder="Focus on delivery, packaging, and customer tips"></textarea>
+      </label>
+      <button type="submit" class="admin-btn">Generate Blog Post</button>
+    </form>
+  </section>
+
+  <section class="admin-section">
+    <h2>Published Blog Posts</h2>
+    <table class="data-table">
+      <thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Status</th></tr></thead>
+      <tbody>
+        <% if (posts && posts.length) { %>
+          <% posts.forEach(post => { %>
+            <tr>
+              <td><strong><%= post.title %></strong><br /><span class="muted">/<%= post.slug %></span></td>
+              <td><%= post.category %></td>
+              <td><%= post.dateLabel || new Date(post.createdAt).toLocaleDateString() %></td>
+              <td><%= post.status %></td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="4" class="muted">No blog posts created yet.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </section>
+</section>
+
+<%- include('partials/footer') %>

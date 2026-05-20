@@ -3,9 +3,10 @@ const router = express.Router();
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const User = require('../models/User');
+const Blog = require('../models/Blog');
 const { requireAuth } = require('../middleware/auth');
 
-const blogPosts = [
+const fallbackBlogPosts = [
   {
     slug: 'custom-ice-cream-pints',
     title: 'How to Build the Perfect Custom Pint',
@@ -140,6 +141,13 @@ const blogPosts = [
   }
 ];
 
+async function getPublishedBlogs() {
+  const posts = await Blog.find({ status: 'published' })
+    .sort({ createdAt: -1 })
+    .lean();
+  return posts.length ? posts : fallbackBlogPosts;
+}
+
 function extractFlavourHighlights(products) {
   const seen = new Set();
   const highlights = [];
@@ -207,6 +215,7 @@ router.get('/', async (req, res) => {
     const featuredProducts = await Product.find({ isActive: true }).sort({ createdAt: -1 }).limit(8).lean();
     const highlights = extractFlavourHighlights(featuredProducts);
     const signatureStack = highlights.slice(0, 3).map((item) => item.name).join(' + ');
+    const blogPosts = await getPublishedBlogs();
 
     res.render('home', {
       title: 'ScoopCraft Pints | Custom Ice Cream Shop',
@@ -392,29 +401,46 @@ router.get('/about', (req, res) => {
 });
 
 router.get('/blog', (req, res) => {
-  res.render('blog', {
-    title: 'ScoopCraft Journal | Custom Ice Cream Insights',
-    posts: blogPosts
-  });
+  getPublishedBlogs()
+    .then((posts) => {
+      res.render('blog', {
+        title: 'ScoopCraft Journal | Custom Ice Cream Insights',
+        posts
+      });
+    })
+    .catch(() => {
+      res.status(500).render('404', {
+        title: 'Error | ScoopCraft'
+      });
+    });
 });
 
 router.get('/blog/:slug', (req, res) => {
   const slug = String(req.params.slug || '').trim();
-  const post = blogPosts.find((item) => item.slug === slug);
+  Blog.findOne({ slug, status: 'published' })
+    .lean()
+    .then(async (post) => {
+      const posts = await getPublishedBlogs();
+      const resolvedPost = post || posts.find((item) => item.slug === slug);
 
-  if (!post) {
-    return res.status(404).render('404', {
-      title: 'Blog Post Not Found | ScoopCraft'
+      if (!resolvedPost) {
+        return res.status(404).render('404', {
+          title: 'Blog Post Not Found | ScoopCraft'
+        });
+      }
+
+      const relatedPosts = posts.filter((item) => item.slug !== slug).slice(0, 2);
+      return res.render('blog-detail', {
+        title: `${resolvedPost.title} | ScoopCraft`,
+        post: resolvedPost,
+        relatedPosts
+      });
+    })
+    .catch(() => {
+      res.status(500).render('404', {
+        title: 'Error | ScoopCraft'
+      });
     });
-  }
-
-  const relatedPosts = blogPosts.filter((item) => item.slug !== slug).slice(0, 2);
-
-  return res.render('blog-detail', {
-    title: `${post.title} | ScoopCraft`,
-    post,
-    relatedPosts
-  });
 });
 
 router.get('/contact', (req, res) => {

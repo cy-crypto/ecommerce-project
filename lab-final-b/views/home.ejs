@@ -224,7 +224,7 @@
             <div class="blog-card__body">
               <div class="blog-meta">
                 <span class="blog-tag"><%= post.category %></span>
-                <span class="muted"><%= post.date %> • <%= post.readTime %></span>
+                <span class="muted"><%= post.dateLabel || post.date %> • <%= post.readTime %></span>
               </div>
               <h3><%= post.title %></h3>
               <p><%= post.excerpt %></p>

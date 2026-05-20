@@ -7,7 +7,7 @@
         <span class="blog-tag"><%= post.category %></span>
         <h1><%= post.title %></h1>
         <div class="blog-meta">
-          <span class="muted"><%= post.date %> • <%= post.readTime %> • By <%= post.author %></span>
+          <span class="muted"><%= post.dateLabel || post.date %> • <%= post.readTime %> • By <%= post.author %></span>
         </div>
       </header>
 
@@ -51,7 +51,7 @@
             <li>
               <a href="/blog/<%= related.slug %>">
                 <strong><%= related.title %></strong>
-                <span class="muted"><%= related.date %> • <%= related.readTime %></span>
+                <span class="muted"><%= related.dateLabel || related.date %> • <%= related.readTime %></span>
               </a>
             </li>
           <% }) %>

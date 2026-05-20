@@ -6,6 +6,7 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const User = require('../models/User');
 const SeoSetting = require('../models/SeoSetting');
+const Blog = require('../models/Blog');
 const { requireAdmin } = require('../middleware/auth');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
@@ -78,6 +79,14 @@ function resolveProductImage(body) {
   const manualUrl = (body.image || '').trim();
   const storeUrl = (body.imageFromStore || '').trim();
   return manualUrl || storeUrl;
+}
+
+function toSlug(value) {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 }
 
 router.get('/signin', async (req, res) => {
@@ -452,6 +461,154 @@ router.get('/', async (req, res) => {
     res.status(500).render('admin/error', {
       title: 'Error | Admin',
       message: 'Failed to load dashboard'
+    });
+  }
+});
+
+router.get('/blogs', async (req, res) => {
+  try {
+    const posts = await Blog.find().sort({ createdAt: -1 }).lean();
+    res.render('admin/blogs', {
+      title: 'Blog Generator | Admin',
+      posts,
+      storeImages: getStoreImages(),
+      error: ''
+    });
+  } catch (error) {
+    console.error('Error loading blogs:', error);
+    res.status(500).render('admin/error', {
+      title: 'Error | Admin',
+      message: 'Failed to load blog generator'
+    });
+  }
+});
+
+router.post('/blogs/generate', async (req, res) => {
+  try {
+    if (!GEMINI_API_KEY) {
+      return res.status(503).render('admin/blogs', {
+        title: 'Blog Generator | Admin',
+        posts: await Blog.find().sort({ createdAt: -1 }).lean(),
+        storeImages: getStoreImages(),
+        error: 'AI service is not configured.'
+      });
+    }
+
+    const category = String(req.body?.category || '').trim();
+    const title = String(req.body?.title || '').trim();
+    const rawImage = String(req.body?.image || '').trim();
+    const storeImage = String(req.body?.imageFromStore || '').trim();
+    const image = rawImage || storeImage;
+    const notes = String(req.body?.notes || '').trim();
+
+    if (!category || !title || !image) {
+      return res.status(400).render('admin/blogs', {
+        title: 'Blog Generator | Admin',
+        posts: await Blog.find().sort({ createdAt: -1 }).lean(),
+        storeImages: getStoreImages(),
+        error: 'Category, title, and image are required.'
+      });
+    }
+
+    const prompt = [
+      'Return ONLY valid JSON. No markdown. No explanations.',
+      'Required structure:',
+      '{',
+      '  "excerpt": "",',
+      '  "author": "",',
+      '  "readTime": "",',
+      '  "coverAlt": "",',
+      '  "sections": [',
+      '    {',
+      '      "heading": "",',
+      '      "paragraphs": [""],',
+      '      "bullets": [""]',
+      '    }',
+      '  ],',
+      '  "takeaways": [""]',
+      '}',
+      'Blog context:',
+      `Title: ${title}`,
+      `Category: ${category}`,
+      notes ? `Notes: ${notes}` : ''
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+    const geminiResponse = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.6,
+          topP: 0.9,
+          maxOutputTokens: 650,
+          responseMimeType: 'application/json'
+        }
+      })
+    });
+
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
+      return res.status(502).render('admin/blogs', {
+        title: 'Blog Generator | Admin',
+        posts: await Blog.find().sort({ createdAt: -1 }).lean(),
+        storeImages: getStoreImages(),
+        error: `AI request failed: ${errorText.slice(0, 140)}`
+      });
+    }
+
+    const payload = await geminiResponse.json();
+    const raw = payload?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    let parsed = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (err) {
+      return res.status(422).render('admin/blogs', {
+        title: 'Blog Generator | Admin',
+        posts: await Blog.find().sort({ createdAt: -1 }).lean(),
+        storeImages: getStoreImages(),
+        error: 'AI response was not valid JSON.'
+      });
+    }
+
+    const baseSlug = toSlug(title) || `blog-${Date.now()}`;
+    let slug = baseSlug;
+    const existing = await Blog.findOne({ slug }).lean();
+    if (existing) {
+      slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
+    }
+
+    const dateLabel = new Date().toLocaleString('en-US', { month: 'short', year: 'numeric' });
+
+    const blog = new Blog({
+      slug,
+      title,
+      excerpt: String(parsed?.excerpt || '').trim(),
+      category,
+      dateLabel,
+      readTime: String(parsed?.readTime || '5 min read').trim(),
+      image,
+      author: String(parsed?.author || 'ScoopCraft Team').trim(),
+      coverAlt: String(parsed?.coverAlt || `${title} cover image`).trim(),
+      sections: Array.isArray(parsed?.sections) ? parsed.sections.map((section) => ({
+        heading: String(section?.heading || '').trim(),
+        paragraphs: Array.isArray(section?.paragraphs) ? section.paragraphs.map((p) => String(p || '').trim()).filter(Boolean) : [],
+        bullets: Array.isArray(section?.bullets) ? section.bullets.map((b) => String(b || '').trim()).filter(Boolean) : []
+      })) : [],
+      takeaways: Array.isArray(parsed?.takeaways) ? parsed.takeaways.map((item) => String(item || '').trim()).filter(Boolean) : [],
+      status: 'published'
+    });
+
+    await blog.save();
+    return res.redirect('/admin/blogs');
+  } catch (error) {
+    console.error('Error generating blog:', error);
+    res.status(500).render('admin/error', {
+      title: 'Error | Admin',
+      message: 'Failed to generate blog post.'
     });
   }
 });
