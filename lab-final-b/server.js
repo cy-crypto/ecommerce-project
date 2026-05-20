@@ -1,6 +1,7 @@
 const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
+const compression = require('compression');
 const helmet = require('helmet');
 const session = require('express-session');
 const SeoSetting = require('./models/SeoSetting');
@@ -78,7 +79,7 @@ app.use(
         defaultSrc: ["'self'"],
         imgSrc: ["'self'", 'data:'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com']
       }
     },
@@ -86,8 +87,20 @@ app.use(
   })
 );
 
+app.use(compression());
+
 // Static files
-app.use(express.static(path.join(__dirname, 'public')));
+const staticMaxAge = process.env.NODE_ENV === 'production' ? '7d' : '1h';
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: staticMaxAge,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+      return;
+    }
+    res.setHeader('Cache-Control', `public, max-age=${process.env.NODE_ENV === 'production' ? 604800 : 3600}`);
+  }
+}));
 app.use(loadCurrentUser);
 
 function truncateText(value, maxLength) {

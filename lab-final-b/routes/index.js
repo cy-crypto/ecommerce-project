@@ -5,6 +5,36 @@ const Order = require('../models/Order');
 const User = require('../models/User');
 const { requireAuth } = require('../middleware/auth');
 
+const blogPosts = [
+  {
+    slug: 'custom-ice-cream-pints',
+    title: 'How to Build the Perfect Custom Pint',
+    excerpt: 'Learn how to balance creamy, crunchy, and fruity layers while picking 3-flavour and 4-flavour blends.',
+    category: 'Custom Pints',
+    date: 'May 2026',
+    readTime: '4 min read',
+    image: '/assets/main-section-imge.jpg'
+  },
+  {
+    slug: 'delivery-cold-chain',
+    title: 'Cold-Chain Delivery: Keeping Pints Perfect',
+    excerpt: 'See how insulated packaging, flash freezing, and tight delivery windows protect every order.',
+    category: 'Delivery',
+    date: 'May 2026',
+    readTime: '3 min read',
+    image: '/assets/chocolate-homepage.webp'
+  },
+  {
+    slug: 'subscription-perks',
+    title: 'Why Subscribers Never Run Out of Dessert',
+    excerpt: 'Weekly subscriptions lock in savings, priority restocks, and rotating seasonal flavour drops.',
+    category: 'Subscriptions',
+    date: 'May 2026',
+    readTime: '5 min read',
+    image: '/assets/pista-homepage.jpg'
+  }
+];
+
 function extractFlavourHighlights(products) {
   const seen = new Set();
   const highlights = [];
@@ -79,7 +109,8 @@ router.get('/', async (req, res) => {
       featuredProducts,
       totalFlavours: highlights.length,
       totalProducts: featuredProducts.length,
-      signatureStack
+      signatureStack,
+      blogPosts
     });
   } catch (error) {
     console.error('Error loading home:', error);
@@ -252,6 +283,13 @@ router.get('/track-order', requireAuth, async (req, res) => {
 router.get('/about', (req, res) => {
   res.render('about', {
     title: 'About Us | ScoopCraft'
+  });
+});
+
+router.get('/blog', (req, res) => {
+  res.render('blog', {
+    title: 'ScoopCraft Journal | Custom Ice Cream Insights',
+    posts: blogPosts
   });
 });
 

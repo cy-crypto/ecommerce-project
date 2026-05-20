@@ -204,6 +204,35 @@
     </div>
   </div>
 </section>
+
+<section class="blog-preview">
+  <div class="container">
+    <div class="blog-preview__header">
+      <div>
+        <h2 class="section-title sc-animate" data-animate="fade-up">From the ScoopCraft Journal</h2>
+        <p class="page-subtitle sc-animate" data-animate="fade-up">Ideas to improve pint-building, delivery prep, and subscriptions.</p>
+      </div>
+      <a href="/blog" class="btn-outline">Read the Blog</a>
+    </div>
+    <div class="blog-grid">
+      <% (blogPosts || []).forEach((post, idx) => { %>
+        <article class="blog-card sc-animate" data-animate="fade-up" data-delay="<%= idx * 80 %>">
+          <div class="blog-card__media">
+            <img src="<%= post.image %>" alt="<%= post.title %>" loading="lazy" />
+          </div>
+          <div class="blog-card__body">
+            <div class="blog-meta">
+              <span class="blog-tag"><%= post.category %></span>
+              <span class="muted"><%= post.date %> • <%= post.readTime %></span>
+            </div>
+            <h3><%= post.title %></h3>
+            <p><%= post.excerpt %></p>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  </div>
+</section>
 <section class="social-proof">
   <div class="container">
     <h2 class="section-title sc-animate" data-animate="fade-up">Loved by Dessert Fans</h2>

@@ -1,0 +1,33 @@
+<%- include('partials/header') %>
+
+<section class="blog-hero">
+  <div class="container">
+    <span class="kicker">ScoopCraft Journal</span>
+    <h1>Fresh ideas for custom pints, delivery, and subscriptions.</h1>
+    <p class="page-subtitle">Discover how we craft, pack, and deliver each pint with precision and care.</p>
+  </div>
+</section>
+
+<section class="blog-section">
+  <div class="container">
+    <div class="blog-grid">
+      <% posts.forEach(post => { %>
+        <article class="blog-card">
+          <div class="blog-card__media">
+            <img src="<%= post.image %>" alt="<%= post.title %>" loading="lazy" />
+          </div>
+          <div class="blog-card__body">
+            <div class="blog-meta">
+              <span class="blog-tag"><%= post.category %></span>
+              <span class="muted"><%= post.date %> • <%= post.readTime %></span>
+            </div>
+            <h2><%= post.title %></h2>
+            <p><%= post.excerpt %></p>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
