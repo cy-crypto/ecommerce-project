@@ -15,6 +15,23 @@ const app = express();
 const PORT = process.env.PORT || 3004;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
+const staticPages = [
+  { path: '/', changefreq: 'weekly', priority: 1.0 },
+  { path: '/products', changefreq: 'weekly', priority: 0.9 },
+  { path: '/blog', changefreq: 'monthly', priority: 0.7 },
+  { path: '/about', changefreq: 'monthly', priority: 0.6 },
+  { path: '/contact', changefreq: 'monthly', priority: 0.6 }
+];
+
+function escapeXml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 // Render (and similar hosts) terminate TLS at a proxy.
 app.set('trust proxy', 1);
 
@@ -522,6 +539,53 @@ app.use(async (req, res, next) => {
     res.locals.seo.ogImageUrl = `${fallbackBaseUrl}/assets/blackseamer-honey-pint.jpg`;
   }
   next();
+});
+
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const setting = await SeoSetting.findOne().select('canonicalBaseUrl').lean();
+    const baseUrl = (setting?.canonicalBaseUrl || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+    const products = await Product.find({ isActive: true }).select('_id updatedAt').lean();
+
+    const urls = [
+      ...staticPages.map((page) => ({
+        loc: `${baseUrl}${page.path}`,
+        changefreq: page.changefreq,
+        priority: page.priority
+      })),
+      ...products.map((product) => ({
+        loc: `${baseUrl}/products/${product._id}`,
+        lastmod: product.updatedAt ? new Date(product.updatedAt).toISOString() : null,
+        changefreq: 'weekly',
+        priority: 0.8
+      }))
+    ];
+
+    const urlset = urls
+      .map((url) => {
+        const lastmodTag = url.lastmod ? `<lastmod>${escapeXml(url.lastmod)}</lastmod>` : '';
+        const changefreqTag = url.changefreq ? `<changefreq>${escapeXml(url.changefreq)}</changefreq>` : '';
+        const priorityTag = typeof url.priority === 'number' ? `<priority>${url.priority.toFixed(1)}</priority>` : '';
+        return `<url><loc>${escapeXml(url.loc)}</loc>${lastmodTag}${changefreqTag}${priorityTag}</url>`;
+      })
+      .join('');
+
+    res.setHeader('Content-Type', 'application/xml');
+    res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urlset}</urlset>`);
+  } catch (error) {
+    res.status(500).send('Failed to generate sitemap.');
+  }
+});
+
+app.get('/robots.txt', async (req, res) => {
+  try {
+    const setting = await SeoSetting.findOne().select('canonicalBaseUrl').lean();
+    const baseUrl = (setting?.canonicalBaseUrl || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+    res.setHeader('Content-Type', 'text/plain');
+    res.send(`User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\n`);
+  } catch (error) {
+    res.status(500).send('Failed to generate robots.txt');
+  }
 });
 
 // Routes
