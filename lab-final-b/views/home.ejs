@@ -217,17 +217,20 @@
     <div class="blog-grid">
       <% (blogPosts || []).forEach((post, idx) => { %>
         <article class="blog-card sc-animate" data-animate="fade-up" data-delay="<%= idx * 80 %>">
-          <div class="blog-card__media">
-            <img src="<%= post.image %>" alt="<%= post.title %>" loading="lazy" decoding="async" width="640" height="420" />
-          </div>
-          <div class="blog-card__body">
-            <div class="blog-meta">
-              <span class="blog-tag"><%= post.category %></span>
-              <span class="muted"><%= post.date %> • <%= post.readTime %></span>
+          <a class="blog-card__link" href="/blog/<%= post.slug %>">
+            <div class="blog-card__media">
+              <img src="<%= post.image %>" alt="<%= post.title %>" loading="lazy" decoding="async" width="640" height="420" />
             </div>
-            <h3><%= post.title %></h3>
-            <p><%= post.excerpt %></p>
-          </div>
+            <div class="blog-card__body">
+              <div class="blog-meta">
+                <span class="blog-tag"><%= post.category %></span>
+                <span class="muted"><%= post.date %> • <%= post.readTime %></span>
+              </div>
+              <h3><%= post.title %></h3>
+              <p><%= post.excerpt %></p>
+              <span class="blog-read">Read article →</span>
+            </div>
+          </a>
         </article>
       <% }) %>
     </div>

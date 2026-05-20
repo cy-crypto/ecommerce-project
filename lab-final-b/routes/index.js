@@ -13,7 +13,42 @@ const blogPosts = [
     category: 'Custom Pints',
     date: 'May 2026',
     readTime: '4 min read',
-    image: '/assets/main-section-imge.jpg'
+    image: '/assets/main-section-imge.jpg',
+    author: 'ScoopCraft Team',
+    coverAlt: 'Custom ice cream pint with layered flavours',
+    sections: [
+      {
+        heading: 'Start with a hero base',
+        paragraphs: [
+          'Choose one flavour that defines the pint and build everything else around it. A base like vanilla bean, pistachio, or salted maple provides a consistent creamy backbone that keeps the overall profile smooth.',
+          'We recommend selecting a base that pairs well with both fruit and chocolate so your supporting layers can add contrast without overpowering the finish.'
+        ],
+        bullets: [
+          'Pick a base that matches the mood (bright, rich, or nutty).',
+          'Avoid pairing two heavy bases in one pint.',
+          'Match the base with one fresh layer and one texture layer.'
+        ]
+      },
+      {
+        heading: 'Balance texture with every scoop',
+        paragraphs: [
+          'The best pints feel consistent from the first bite to the last. Add one layer that is light and airy, then follow with a second layer that is dense or crunchy to keep the experience exciting.',
+          'If you are selecting a 4-flavour pint, repeat the texture cycle so the last spoonful feels just as vibrant as the first.'
+        ]
+      },
+      {
+        heading: 'Plan the flavour order',
+        paragraphs: [
+          'Think of your order as a journey. Start with a bright or fruity note, move into something rich, and finish with a smooth base so the aftertaste is clean and memorable.',
+          'For subscription customers, rotate the order each week to keep the profile familiar but still fresh.'
+        ]
+      }
+    ],
+    takeaways: [
+      'Use one hero base to anchor the pint.',
+      'Mix creamy, fruity, and crunchy notes in every order.',
+      'Plan the flavour order for a memorable finish.'
+    ]
   },
   {
     slug: 'delivery-cold-chain',
@@ -22,7 +57,42 @@ const blogPosts = [
     category: 'Delivery',
     date: 'May 2026',
     readTime: '3 min read',
-    image: '/assets/chocolate-homepage.webp'
+    image: '/assets/chocolate-homepage.webp',
+    author: 'Logistics Team',
+    coverAlt: 'Insulated ice cream delivery package',
+    sections: [
+      {
+        heading: 'Flash-freeze for stability',
+        paragraphs: [
+          'Every pint is flash-frozen the moment the final layer is set. This locks in texture and keeps mix-ins suspended evenly throughout the pint.',
+          'Rapid freezing keeps ice crystals small, which means a creamier finish when the pint arrives.'
+        ]
+      },
+      {
+        heading: 'Insulated packaging with a plan',
+        paragraphs: [
+          'We use insulated liners and cold packs designed for two-day protection. That gives us a buffer so every shipment stays in the safe range even if there are minor carrier delays.',
+          'Packages are tested in high and low temperature scenarios before each seasonal rollout.'
+        ],
+        bullets: [
+          'Cold packs are packed at the last moment before pickup.',
+          'Packaging is sized to reduce excess air and movement.',
+          'Labels signal that the package should not be left in heat.'
+        ]
+      },
+      {
+        heading: 'What customers can do',
+        paragraphs: [
+          'Plan to bring your package indoors within two hours. If you cannot, move the pints to a freezer as soon as possible and let them temper for 5-7 minutes before serving.',
+          'For subscription deliveries, set a reminder so the order is never left outside overnight.'
+        ]
+      }
+    ],
+    takeaways: [
+      'Flash-freezing preserves creamy texture.',
+      'Insulated liners keep deliveries safe for up to 48 hours.',
+      'Bring pints indoors quickly for the best experience.'
+    ]
   },
   {
     slug: 'subscription-perks',
@@ -31,7 +101,42 @@ const blogPosts = [
     category: 'Subscriptions',
     date: 'May 2026',
     readTime: '5 min read',
-    image: '/assets/pista-homepage.jpg'
+    image: '/assets/pista-homepage.jpg',
+    author: 'ScoopCraft Team',
+    coverAlt: 'Weekly subscription pints arranged on a table',
+    sections: [
+      {
+        heading: 'Predictable drops, less stress',
+        paragraphs: [
+          'Subscribers get their pints on a dependable cadence, so there is always something ready for movie nights, celebrations, and hosting friends.',
+          'We align production cycles with subscription windows to keep quality consistent across every drop.'
+        ]
+      },
+      {
+        heading: 'Savings and priority restocks',
+        paragraphs: [
+          'Weekly plans include built-in savings and priority access to limited seasonal flavours. That means you can keep a steady rotation without missing your favorites.',
+          'Subscribers are alerted first when new seasonal menus go live.'
+        ],
+        bullets: [
+          'Savings are applied automatically every week.',
+          'Priority access to limited flavour drops.',
+          'Flexible updates for delivery windows and flavour choices.'
+        ]
+      },
+      {
+        heading: 'How to personalize your plan',
+        paragraphs: [
+          'Use your order history to remix your top picks and test new blends. If you loved a custom combination, save it and rotate in a new hero flavour once per month.',
+          'Your account dashboard tracks every order so your next edit takes seconds.'
+        ]
+      }
+    ],
+    takeaways: [
+      'Subscribers get consistent weekly drops.',
+      'Priority restocks keep favorites available.',
+      'Plan edits take minutes inside your account.'
+    ]
   }
 ];
 
@@ -290,6 +395,25 @@ router.get('/blog', (req, res) => {
   res.render('blog', {
     title: 'ScoopCraft Journal | Custom Ice Cream Insights',
     posts: blogPosts
+  });
+});
+
+router.get('/blog/:slug', (req, res) => {
+  const slug = String(req.params.slug || '').trim();
+  const post = blogPosts.find((item) => item.slug === slug);
+
+  if (!post) {
+    return res.status(404).render('404', {
+      title: 'Blog Post Not Found | ScoopCraft'
+    });
+  }
+
+  const relatedPosts = blogPosts.filter((item) => item.slug !== slug).slice(0, 2);
+
+  return res.render('blog-detail', {
+    title: `${post.title} | ScoopCraft`,
+    post,
+    relatedPosts
   });
 });
 

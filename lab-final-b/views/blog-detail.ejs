@@ -1,0 +1,64 @@
+<%- include('partials/header') %>
+
+<section class="blog-detail">
+  <div class="container blog-detail__grid">
+    <article class="blog-detail__main">
+      <header class="blog-detail__header">
+        <span class="blog-tag"><%= post.category %></span>
+        <h1><%= post.title %></h1>
+        <div class="blog-meta">
+          <span class="muted"><%= post.date %> • <%= post.readTime %> • By <%= post.author %></span>
+        </div>
+      </header>
+
+      <div class="blog-detail__cover">
+        <img src="<%= post.image %>" alt="<%= post.coverAlt || post.title %>" loading="lazy" decoding="async" width="980" height="520" />
+      </div>
+
+      <p class="blog-detail__intro"><%= post.excerpt %></p>
+
+      <% (post.sections || []).forEach(section => { %>
+        <section class="blog-detail__section">
+          <h2><%= section.heading %></h2>
+          <% (section.paragraphs || []).forEach(paragraph => { %>
+            <p><%= paragraph %></p>
+          <% }) %>
+          <% if (section.bullets && section.bullets.length) { %>
+            <ul>
+              <% section.bullets.forEach(bullet => { %>
+                <li><%= bullet %></li>
+              <% }) %>
+            </ul>
+          <% } %>
+        </section>
+      <% }) %>
+    </article>
+
+    <aside class="blog-detail__aside">
+      <div class="blog-detail__card">
+        <h3>Key Takeaways</h3>
+        <ul>
+          <% (post.takeaways || []).forEach(item => { %>
+            <li><%= item %></li>
+          <% }) %>
+        </ul>
+      </div>
+
+      <div class="blog-detail__card">
+        <h3>Related Reads</h3>
+        <ul class="blog-detail__related">
+          <% relatedPosts.forEach(related => { %>
+            <li>
+              <a href="/blog/<%= related.slug %>">
+                <strong><%= related.title %></strong>
+                <span class="muted"><%= related.date %> • <%= related.readTime %></span>
+              </a>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
