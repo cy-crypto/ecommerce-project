@@ -19,6 +19,23 @@
   </div>
 
   <div class="dashboard-grid">
+    <section class="dashboard-card dashboard-card-span">
+      <div class="dashboard-card__header">
+        <h2>Revenue and Order Trends</h2>
+        <span class="dashboard-badge">Last 30 Days</span>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-panel">
+          <h3>Orders Per Day</h3>
+          <canvas id="ordersChart" height="180"></canvas>
+        </div>
+        <div class="chart-panel">
+          <h3>Revenue Per Day</h3>
+          <canvas id="revenueChart" height="180"></canvas>
+        </div>
+      </div>
+    </section>
+
     <section class="dashboard-card">
       <div class="dashboard-card__header">
         <h2>Order Analytics</h2>
@@ -134,25 +151,61 @@
     </section>
 
     <section class="dashboard-card">
-      <h2>AI Recommendations</h2>
+      <div class="dashboard-card__header">
+        <h2>Performance Mix</h2>
+        <span class="dashboard-badge">Orders and Best Sellers</span>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-panel">
+          <h3>Order Status</h3>
+          <canvas id="statusChart" height="180"></canvas>
+        </div>
+        <div class="chart-panel">
+          <h3>Top Sellers (Units)</h3>
+          <canvas id="topSellingChart" height="180"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-card">
+      <div class="dashboard-card__header">
+        <h2>AI Recommendations</h2>
+        <span class="dashboard-badge">Gemini Insights</span>
+      </div>
       <% if (aiInsights.error) { %>
         <p class="muted"><%= aiInsights.error %></p>
       <% } %>
       <% if (aiInsights.insights.length) { %>
         <h3>Insights</h3>
-        <ul class="dashboard-list">
+        <div class="insight-grid">
           <% aiInsights.insights.forEach(item => { %>
-            <li><%= item %></li>
+            <article class="insight-card">
+              <div class="insight-card__header">
+                <strong><%= item.title %></strong>
+                <span class="insight-pill <%= String(item.priority || '').toLowerCase() %>"><%= item.priority %></span>
+              </div>
+              <% if (item.detail) { %>
+                <p class="muted"><%= item.detail %></p>
+              <% } %>
+            </article>
           <% }) %>
-        </ul>
+        </div>
       <% } %>
       <% if (aiInsights.actions.length) { %>
         <h3>Recommended Actions</h3>
-        <ul class="dashboard-list">
+        <div class="insight-grid">
           <% aiInsights.actions.forEach(item => { %>
-            <li><%= item %></li>
+            <article class="insight-card">
+              <div class="insight-card__header">
+                <strong><%= item.title %></strong>
+                <span class="insight-pill <%= String(item.priority || '').toLowerCase() %>"><%= item.priority %></span>
+              </div>
+              <% if (item.detail) { %>
+                <p class="muted"><%= item.detail %></p>
+              <% } %>
+            </article>
           <% }) %>
-        </ul>
+        </div>
       <% } %>
       <% if (!aiInsights.error && !aiInsights.insights.length && !aiInsights.actions.length) { %>
         <p class="muted">AI recommendations are preparing. Refresh in a moment.</p>
@@ -175,5 +228,142 @@
     </section>
   </div>
 </section>
+
+<script>
+  window.dashboardCharts = {
+    labels: <%- JSON.stringify(charts.labels || []) %>,
+    orders: <%- JSON.stringify(charts.orders || []) %>,
+    revenue: <%- JSON.stringify(charts.revenue || []) %>,
+    status: {
+      placed: <%- JSON.stringify(analytics.statusCounts.Placed || 0) %>,
+      processing: <%- JSON.stringify(analytics.statusCounts.Processing || 0) %>,
+      delivered: <%- JSON.stringify(analytics.statusCounts.Delivered || 0) %>
+    },
+    topSelling: {
+      labels: <%- JSON.stringify(topSelling.map(row => row.name)) %>,
+      values: <%- JSON.stringify(topSelling.map(row => row.quantity)) %>
+    }
+  };
+</script>
+<script>
+  (function () {
+    if (typeof Chart === 'undefined' || !window.dashboardCharts) {
+      return;
+    }
+
+    const { labels, orders, revenue, status, topSelling } = window.dashboardCharts;
+    const ordersCtx = document.getElementById('ordersChart');
+    const revenueCtx = document.getElementById('revenueChart');
+    const statusCtx = document.getElementById('statusChart');
+    const topSellingCtx = document.getElementById('topSellingChart');
+
+    if (ordersCtx) {
+      new Chart(ordersCtx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Orders',
+            data: orders,
+            borderColor: '#2f6dc7',
+            backgroundColor: 'rgba(47, 109, 199, 0.15)',
+            tension: 0.35,
+            fill: true,
+            pointRadius: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    if (revenueCtx) {
+      new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Revenue',
+            data: revenue,
+            borderColor: '#17a0df',
+            backgroundColor: 'rgba(23, 160, 223, 0.15)',
+            tension: 0.35,
+            fill: true,
+            pointRadius: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    if (statusCtx) {
+      new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Placed', 'Processing', 'Delivered'],
+          datasets: [{
+            data: [status.placed, status.processing, status.delivered],
+            backgroundColor: ['#4a86ea', '#76b1ff', '#94c2ff'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    if (topSellingCtx) {
+      new Chart(topSellingCtx, {
+        type: 'bar',
+        data: {
+          labels: topSelling.labels,
+          datasets: [{
+            label: 'Units',
+            data: topSelling.values,
+            backgroundColor: 'rgba(47, 109, 199, 0.5)',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+  })();
+</script>
 
 <%- include('partials/footer') %>

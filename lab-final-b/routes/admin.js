@@ -160,6 +160,9 @@ router.get('/', async (req, res) => {
     const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
     const sevenDaysAgo = new Date(now);
     sevenDaysAgo.setDate(now.getDate() - 7);
+    const chartStart = new Date(now);
+    chartStart.setDate(now.getDate() - 29);
+    chartStart.setHours(0, 0, 0, 0);
 
     const [
       totalProducts,
@@ -172,7 +175,8 @@ router.get('/', async (req, res) => {
       mtdOrdersAgg,
       prevOrdersAgg,
       statusAgg,
-      topSelling
+      topSelling,
+      ordersByDay
     ] = await Promise.all([
       Product.countDocuments(),
       Order.countDocuments(),
@@ -205,6 +209,19 @@ router.get('/', async (req, res) => {
         },
         { $sort: { quantity: -1 } },
         { $limit: 5 }
+      ]),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: chartStart, $lte: now } } },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+            },
+            orders: { $sum: 1 },
+            revenue: { $sum: '$total' }
+          }
+        },
+        { $sort: { _id: 1 } }
       ])
     ]);
 
@@ -224,6 +241,24 @@ router.get('/', async (req, res) => {
     const projectedRevenue = mtdStats.revenue + (avgRevenuePerDay * daysRemaining);
     const averageOrderValue = mtdStats.orders > 0 ? (mtdStats.revenue / mtdStats.orders) : 0;
 
+    const ordersByDayMap = ordersByDay.reduce((acc, row) => {
+      acc[row._id] = row;
+      return acc;
+    }, {});
+
+    const chartLabels = [];
+    const chartOrders = [];
+    const chartRevenue = [];
+    for (let offset = 0; offset < 30; offset += 1) {
+      const day = new Date(chartStart);
+      day.setDate(chartStart.getDate() + offset);
+      const key = day.toISOString().slice(0, 10);
+      const row = ordersByDayMap[key] || { orders: 0, revenue: 0 };
+      chartLabels.push(day.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }));
+      chartOrders.push(row.orders || 0);
+      chartRevenue.push(Number(row.revenue || 0));
+    }
+
     let aiInsights = { insights: [], actions: [], error: '' };
     if (GEMINI_API_KEY) {
       const cacheKey = `dashboard:${startOfMonth.toISOString().slice(0, 7)}`;
@@ -236,8 +271,8 @@ router.get('/', async (req, res) => {
             'Return ONLY valid JSON. No markdown. No explanations.',
             'Required structure:',
             '{',
-            '  "insights": [],',
-            '  "actions": []',
+            '  "insights": [{ "title": "", "detail": "", "priority": "High|Medium|Low" }],',
+            '  "actions": [{ "title": "", "detail": "", "priority": "High|Medium|Low" }]',
             '}',
             'Context for admin dashboard:',
             `Orders MTD: ${mtdStats.orders}`,
@@ -276,9 +311,26 @@ router.get('/', async (req, res) => {
           const payload = await geminiResponse.json();
           const raw = payload?.candidates?.[0]?.content?.parts?.[0]?.text || '';
           const parsed = JSON.parse(raw);
+          const normalizeItems = (items) => (Array.isArray(items) ? items : [])
+            .map((item) => {
+              if (typeof item === 'string') {
+                return {
+                  title: item.trim(),
+                  detail: '',
+                  priority: 'Medium'
+                };
+              }
+              return {
+                title: String(item?.title || '').trim(),
+                detail: String(item?.detail || '').trim(),
+                priority: String(item?.priority || 'Medium').trim() || 'Medium'
+              };
+            })
+            .filter((item) => item.title);
+
           aiInsights = {
-            insights: Array.isArray(parsed?.insights) ? parsed.insights.map((item) => String(item || '').trim()).filter(Boolean) : [],
-            actions: Array.isArray(parsed?.actions) ? parsed.actions.map((item) => String(item || '').trim()).filter(Boolean) : [],
+            insights: normalizeItems(parsed?.insights),
+            actions: normalizeItems(parsed?.actions),
             error: ''
           };
           dashboardInsightCache.set(cacheKey, { createdAt: Date.now(), data: aiInsights });
@@ -305,6 +357,11 @@ router.get('/', async (req, res) => {
         projectedOrders,
         projectedRevenue,
         statusCounts
+      },
+      charts: {
+        labels: chartLabels,
+        orders: chartOrders,
+        revenue: chartRevenue
       },
       inventory: {
         outOfStockProducts,
