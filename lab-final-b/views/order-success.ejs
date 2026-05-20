@@ -1,23 +1,37 @@
 <%- include('partials/header') %>
 
-<section>
-  <h1>Order Placed Successfully</h1>
-  <p>Your order ID is <strong><%= order._id %></strong>.</p>
-  <p>Status: <strong><%= order.status %></strong></p>
-  <p>Plan: <strong><%= order.plan === 'subscription' ? 'Weekly Subscription' : 'One-Time Order' %></strong></p>
-  <p>Total Paid: <strong>$<%= order.total.toFixed(2) %></strong></p>
+<section class="checkout-page">
+  <div class="container">
+    <h1 class="page-title">Order Placed Successfully</h1>
+    <p class="page-subtitle">Your order is confirmed and queued for preparation.</p>
 
-  <h2>Tracking History</h2>
-  <ul>
-    <% (order.trackingHistory || []).forEach(entry => { %>
-      <li>
-        <strong><%= entry.status %></strong> - <%= entry.note %> (<%= new Date(entry.updatedAt).toLocaleString() %>)
-      </li>
-    <% }) %>
-  </ul>
+    <div class="checkout-grid">
+      <div class="checkout-form-card">
+        <h2>Order Details</h2>
+        <p>Your order ID is <strong><%= order._id %></strong>.</p>
+        <p>Status: <strong><%= order.status %></strong></p>
+        <p>Plan: <strong><%= order.plan === 'subscription' ? 'Weekly Subscription' : 'One-Time Order' %></strong></p>
+        <p>Total Paid: <strong>$<%= order.total.toFixed(2) %></strong></p>
 
-  <a href="/my-orders" class="btn-primary">View My Orders</a>
-  <a href="/track-order?orderId=<%= order._id %>" class="btn-outline">Track This Order</a>
+        <div class="product-actions top-gap">
+          <a href="/my-orders" class="btn-primary">View My Orders</a>
+          <a href="/track-order?orderId=<%= order._id %>" class="btn-outline">Track This Order</a>
+        </div>
+      </div>
+
+      <aside class="checkout-summary-card">
+        <h2>Tracking History</h2>
+        <ul class="tracking-list">
+          <% (order.trackingHistory || []).forEach(entry => { %>
+            <li>
+              <strong><%= entry.status %></strong> - <%= entry.note %>
+              <span class="muted">(<%= new Date(entry.updatedAt).toLocaleString() %>)</span>
+            </li>
+          <% }) %>
+        </ul>
+      </aside>
+    </div>
+  </div>
 </section>
 
 <%- include('partials/footer') %>

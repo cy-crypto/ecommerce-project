@@ -11,6 +11,8 @@ const { requireAdmin } = require('../middleware/auth');
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const seoCache = new Map();
 const SEO_CACHE_TTL_MS = 1000 * 60 * 60;
+const dashboardInsightCache = new Map();
+const DASHBOARD_CACHE_TTL_MS = 1000 * 60 * 20;
 
 function parseFlavourOptions(rawInput) {
   const lines = String(rawInput || '')
@@ -152,19 +154,165 @@ router.use(requireAdmin);
 
 router.get('/', async (req, res) => {
   try {
-    const [totalProducts, totalOrders, totalUsers, products] = await Promise.all([
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(now.getDate() - 7);
+
+    const [
+      totalProducts,
+      totalOrders,
+      totalUsers,
+      recentProducts,
+      outOfStockProducts,
+      newlyOutOfStockProducts,
+      lowStockProducts,
+      mtdOrdersAgg,
+      prevOrdersAgg,
+      statusAgg,
+      topSelling
+    ] = await Promise.all([
       Product.countDocuments(),
       Order.countDocuments(),
       User.countDocuments(),
-      Product.find().limit(5).sort({ createdAt: -1 })
+      Product.find().limit(5).sort({ createdAt: -1 }).lean(),
+      Product.find({ stock: { $lte: 0 } }).sort({ updatedAt: -1 }).limit(6).lean(),
+      Product.find({ stock: { $lte: 0 }, updatedAt: { $gte: sevenDaysAgo } }).sort({ updatedAt: -1 }).limit(6).lean(),
+      Product.find({ stock: { $gt: 0, $lte: 5 } }).sort({ stock: 1, updatedAt: -1 }).limit(6).lean(),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: startOfMonth, $lte: now } } },
+        { $group: { _id: null, orders: { $sum: 1 }, revenue: { $sum: '$total' } } }
+      ]),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: startOfPrevMonth, $lte: endOfPrevMonth } } },
+        { $group: { _id: null, orders: { $sum: 1 }, revenue: { $sum: '$total' } } }
+      ]),
+      Order.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } }
+      ]),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: startOfMonth, $lte: now } } },
+        { $unwind: '$items' },
+        {
+          $group: {
+            _id: '$items.product',
+            name: { $first: '$items.name' },
+            quantity: { $sum: '$items.quantity' },
+            revenue: { $sum: '$items.lineTotal' }
+          }
+        },
+        { $sort: { quantity: -1 } },
+        { $limit: 5 }
+      ])
     ]);
+
+    const mtdStats = mtdOrdersAgg[0] || { orders: 0, revenue: 0 };
+    const prevStats = prevOrdersAgg[0] || { orders: 0, revenue: 0 };
+    const statusCounts = statusAgg.reduce((acc, row) => {
+      acc[row._id] = row.count;
+      return acc;
+    }, { Placed: 0, Processing: 0, Delivered: 0 });
+
+    const daysElapsed = Math.max(1, now.getDate());
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const daysRemaining = Math.max(0, daysInMonth - daysElapsed);
+    const avgOrdersPerDay = mtdStats.orders / daysElapsed;
+    const avgRevenuePerDay = mtdStats.revenue / daysElapsed;
+    const projectedOrders = Math.round(mtdStats.orders + (avgOrdersPerDay * daysRemaining));
+    const projectedRevenue = mtdStats.revenue + (avgRevenuePerDay * daysRemaining);
+    const averageOrderValue = mtdStats.orders > 0 ? (mtdStats.revenue / mtdStats.orders) : 0;
+
+    let aiInsights = { insights: [], actions: [], error: '' };
+    if (GEMINI_API_KEY) {
+      const cacheKey = `dashboard:${startOfMonth.toISOString().slice(0, 7)}`;
+      const cached = dashboardInsightCache.get(cacheKey);
+      if (cached && (Date.now() - cached.createdAt) < DASHBOARD_CACHE_TTL_MS) {
+        aiInsights = cached.data;
+      } else {
+        try {
+          const prompt = [
+            'Return ONLY valid JSON. No markdown. No explanations.',
+            'Required structure:',
+            '{',
+            '  "insights": [],',
+            '  "actions": []',
+            '}',
+            'Context for admin dashboard:',
+            `Orders MTD: ${mtdStats.orders}`,
+            `Revenue MTD: ${mtdStats.revenue.toFixed(2)}`,
+            `Orders Prev Month: ${prevStats.orders}`,
+            `Revenue Prev Month: ${prevStats.revenue.toFixed(2)}`,
+            `Projected Orders (month-end): ${projectedOrders}`,
+            `Projected Revenue (month-end): ${projectedRevenue.toFixed(2)}`,
+            `Status Counts: Placed ${statusCounts.Placed}, Processing ${statusCounts.Processing}, Delivered ${statusCounts.Delivered}`,
+            `Top Sellers: ${topSelling.map((row) => `${row.name} (${row.quantity})`).join(', ') || 'None'}`,
+            `Out of Stock: ${outOfStockProducts.map((row) => row.name).join(', ') || 'None'}`,
+            `Newly Out of Stock: ${newlyOutOfStockProducts.map((row) => row.name).join(', ') || 'None'}`,
+            `Low Stock: ${lowStockProducts.map((row) => `${row.name} (${row.stock})`).join(', ') || 'None'}`
+          ].join('\n');
+
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+          const geminiResponse = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.2,
+                topP: 0.85,
+                maxOutputTokens: 256,
+                responseMimeType: 'application/json'
+              }
+            })
+          });
+
+          if (!geminiResponse.ok) {
+            const errorText = await geminiResponse.text();
+            throw new Error(errorText.slice(0, 300));
+          }
+
+          const payload = await geminiResponse.json();
+          const raw = payload?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const parsed = JSON.parse(raw);
+          aiInsights = {
+            insights: Array.isArray(parsed?.insights) ? parsed.insights.map((item) => String(item || '').trim()).filter(Boolean) : [],
+            actions: Array.isArray(parsed?.actions) ? parsed.actions.map((item) => String(item || '').trim()).filter(Boolean) : [],
+            error: ''
+          };
+          dashboardInsightCache.set(cacheKey, { createdAt: Date.now(), data: aiInsights });
+        } catch (error) {
+          aiInsights = { insights: [], actions: [], error: 'AI recommendations are unavailable right now.' };
+        }
+      }
+    } else {
+      aiInsights = { insights: [], actions: [], error: 'Set GEMINI_API_KEY to enable AI recommendations.' };
+    }
 
     res.render('admin/dashboard', {
       title: 'Admin Dashboard | ScoopCraft',
       totalProducts,
       totalOrders,
       totalUsers,
-      recentProducts: products
+      recentProducts,
+      analytics: {
+        ordersMtd: mtdStats.orders,
+        revenueMtd: mtdStats.revenue,
+        ordersPrev: prevStats.orders,
+        revenuePrev: prevStats.revenue,
+        averageOrderValue,
+        projectedOrders,
+        projectedRevenue,
+        statusCounts
+      },
+      inventory: {
+        outOfStockProducts,
+        newlyOutOfStockProducts,
+        lowStockProducts
+      },
+      topSelling,
+      aiInsights
     });
   } catch (error) {
     console.error('Error loading dashboard:', error);

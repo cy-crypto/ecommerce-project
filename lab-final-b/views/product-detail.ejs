@@ -57,15 +57,18 @@
         <% } %>
 
         <div class="product-actions top-gap">
-          <button
-            id="addToCartBtn"
-            type="submit"
-            class="btn-primary btn-glow <%= isOutOfStock ? 'is-out-of-stock' : '' %>"
-            <%= isOutOfStock ? 'disabled' : '' %>
-            title="<%= isOutOfStock ? 'Out of stock' : 'Add to cart' %>"
-          >
-            <%= isOutOfStock ? 'Out of Stock' : 'Add To Cart' %>
-          </button>
+          <% if (!isOutOfStock) { %>
+            <button
+              id="addToCartBtn"
+              type="submit"
+              class="btn-primary btn-glow"
+              title="Add to cart"
+            >
+              Add To Cart
+            </button>
+          <% } else { %>
+            <p class="muted out-of-stock-note">Currently out of stock. Check back soon.</p>
+          <% } %>
         </div>
       </form>
 

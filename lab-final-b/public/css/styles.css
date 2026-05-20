@@ -1450,6 +1450,14 @@ a {
     gap: 10px;
 }
 
+.out-of-stock-note {
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #f7faff;
+    font-weight: 700;
+}
+
 .btn-wishlist {
     border-radius: 999px;
     padding: 11px 20px;
@@ -1646,6 +1654,21 @@ a {
 .summary-flavours {
     margin: -4px 0 8px;
     font-size: 0.92rem;
+}
+
+.tracking-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: grid;
+    gap: 10px;
+}
+
+.tracking-list li {
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #f7faff;
 }
 
 /* Enhanced form fields and inputs */

@@ -140,9 +140,12 @@
 
     const stock = Number(form.getAttribute('data-stock') || 0);
     const addButton = document.getElementById('addToCartBtn');
-    if (stock <= 0 && addButton) {
-      addButton.disabled = true;
-      addButton.textContent = 'Out of Stock';
+    if (stock <= 0) {
+      if (addButton) {
+        addButton.disabled = true;
+        addButton.textContent = 'Out of Stock';
+      }
+      return;
     }
 
     form.addEventListener('submit', function (event) {

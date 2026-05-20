@@ -1,38 +1,179 @@
 <%- include('partials/header') %>
 
-<section>
+<section class="dashboard-shell">
   <div class="dashboard-topbar">
     <div>
       <h1>Dashboard</h1>
-      <p class="dashboard-subtitle">Manage catalog, users, orders, and jump back to your storefront quickly.</p>
+      <p class="dashboard-subtitle">Monitor catalog health, order velocity, and inventory risks in one place.</p>
     </div>
     <a href="/" class="admin-btn admin-btn-site" target="_blank" rel="noopener noreferrer">Back to Site</a>
   </div>
 
-  <div class="dashboard-actions">
-    <a href="/admin/products/new" class="admin-btn">Add Product</a>
-    <a href="/admin/orders" class="admin-btn admin-btn-muted">Review Orders</a>
-    <a href="/admin/seo" class="admin-btn admin-btn-muted">SEO Settings</a>
-  </div>
-
-  <div class="admin-stats">
+  <div class="admin-stats dashboard-kpis">
     <article class="stat-card"><h3><%= totalProducts %></h3><p>Products</p></article>
-    <article class="stat-card"><h3><%= totalOrders %></h3><p>Orders</p></article>
+    <article class="stat-card"><h3><%= totalOrders %></h3><p>Total Orders</p></article>
     <article class="stat-card"><h3><%= totalUsers %></h3><p>Users</p></article>
+    <article class="stat-card"><h3><%= analytics.ordersMtd %></h3><p>Orders MTD</p></article>
+    <article class="stat-card"><h3>$<%= analytics.revenueMtd.toFixed(2) %></h3><p>Revenue MTD</p></article>
+    <article class="stat-card"><h3>$<%= analytics.averageOrderValue.toFixed(2) %></h3><p>Avg Order Value</p></article>
   </div>
 
-  <h2>Recent Products</h2>
-  <table class="data-table">
-    <thead><tr><th>Name</th><th>Price</th></tr></thead>
-    <tbody>
-      <% recentProducts.forEach(product => { %>
-        <tr>
-          <td><%= product.name %></td>
-          <td>$<%= product.price.toFixed(2) %></td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
+  <div class="dashboard-grid">
+    <section class="dashboard-card">
+      <div class="dashboard-card__header">
+        <h2>Order Analytics</h2>
+        <span class="dashboard-badge">MTD vs Previous Month</span>
+      </div>
+      <div class="metric-grid">
+        <div class="metric">
+          <p>Orders MTD</p>
+          <h3><%= analytics.ordersMtd %></h3>
+          <span class="metric-sub">Prev: <%= analytics.ordersPrev %></span>
+        </div>
+        <div class="metric">
+          <p>Revenue MTD</p>
+          <h3>$<%= analytics.revenueMtd.toFixed(2) %></h3>
+          <span class="metric-sub">Prev: $<%= analytics.revenuePrev.toFixed(2) %></span>
+        </div>
+        <div class="metric">
+          <p>Placed Orders</p>
+          <h3><%= analytics.statusCounts.Placed || 0 %></h3>
+        </div>
+        <div class="metric">
+          <p>Processing</p>
+          <h3><%= analytics.statusCounts.Processing || 0 %></h3>
+        </div>
+        <div class="metric">
+          <p>Delivered</p>
+          <h3><%= analytics.statusCounts.Delivered || 0 %></h3>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-card">
+      <div class="dashboard-card__header">
+        <h2>Future Stats</h2>
+        <span class="dashboard-badge">Projected Month End</span>
+      </div>
+      <div class="metric-grid">
+        <div class="metric">
+          <p>Projected Orders</p>
+          <h3><%= analytics.projectedOrders %></h3>
+          <span class="metric-sub">Based on current pace</span>
+        </div>
+        <div class="metric">
+          <p>Projected Revenue</p>
+          <h3>$<%= analytics.projectedRevenue.toFixed(2) %></h3>
+          <span class="metric-sub">Based on current pace</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-card">
+      <h2>Inventory Alerts</h2>
+      <div class="dashboard-list-grid">
+        <div>
+          <h3>Out of Stock</h3>
+          <ul class="dashboard-list">
+            <% if (inventory.outOfStockProducts.length) { %>
+              <% inventory.outOfStockProducts.forEach(product => { %>
+                <li><strong><%= product.name %></strong> <span class="muted">(updated <%= new Date(product.updatedAt).toLocaleDateString() %>)</span></li>
+              <% }) %>
+            <% } else { %>
+              <li class="muted">No out of stock products.</li>
+            <% } %>
+          </ul>
+        </div>
+        <div>
+          <h3>Newly Out of Stock</h3>
+          <ul class="dashboard-list">
+            <% if (inventory.newlyOutOfStockProducts.length) { %>
+              <% inventory.newlyOutOfStockProducts.forEach(product => { %>
+                <li><strong><%= product.name %></strong> <span class="muted">(updated <%= new Date(product.updatedAt).toLocaleDateString() %>)</span></li>
+              <% }) %>
+            <% } else { %>
+              <li class="muted">No new stock-outs in last 7 days.</li>
+            <% } %>
+          </ul>
+        </div>
+        <div>
+          <h3>Hot Stock (Low)</h3>
+          <ul class="dashboard-list">
+            <% if (inventory.lowStockProducts.length) { %>
+              <% inventory.lowStockProducts.forEach(product => { %>
+                <li><strong><%= product.name %></strong> <span class="muted">(<%= product.stock %> left)</span></li>
+              <% }) %>
+            <% } else { %>
+              <li class="muted">No low stock products.</li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-card">
+      <h2>Top Sellers (MTD)</h2>
+      <table class="data-table data-table-compact">
+        <thead><tr><th>Product</th><th>Units</th><th>Revenue</th></tr></thead>
+        <tbody>
+          <% if (topSelling.length) { %>
+            <% topSelling.forEach(row => { %>
+              <tr>
+                <td><%= row.name %></td>
+                <td><%= row.quantity %></td>
+                <td>$<%= Number(row.revenue || 0).toFixed(2) %></td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="3" class="muted">No sales yet this month.</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="dashboard-card">
+      <h2>AI Recommendations</h2>
+      <% if (aiInsights.error) { %>
+        <p class="muted"><%= aiInsights.error %></p>
+      <% } %>
+      <% if (aiInsights.insights.length) { %>
+        <h3>Insights</h3>
+        <ul class="dashboard-list">
+          <% aiInsights.insights.forEach(item => { %>
+            <li><%= item %></li>
+          <% }) %>
+        </ul>
+      <% } %>
+      <% if (aiInsights.actions.length) { %>
+        <h3>Recommended Actions</h3>
+        <ul class="dashboard-list">
+          <% aiInsights.actions.forEach(item => { %>
+            <li><%= item %></li>
+          <% }) %>
+        </ul>
+      <% } %>
+      <% if (!aiInsights.error && !aiInsights.insights.length && !aiInsights.actions.length) { %>
+        <p class="muted">AI recommendations are preparing. Refresh in a moment.</p>
+      <% } %>
+    </section>
+
+    <section class="dashboard-card">
+      <h2>Recent Products</h2>
+      <table class="data-table data-table-compact">
+        <thead><tr><th>Name</th><th>Price</th></tr></thead>
+        <tbody>
+          <% recentProducts.forEach(product => { %>
+            <tr>
+              <td><%= product.name %></td>
+              <td>$<%= product.price.toFixed(2) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </section>
+  </div>
 </section>
 
 <%- include('partials/footer') %>
