@@ -235,9 +235,9 @@
     orders: <%- JSON.stringify(charts.orders || []) %>,
     revenue: <%- JSON.stringify(charts.revenue || []) %>,
     status: {
-      placed: <%- JSON.stringify(analytics.statusCounts.Placed || 0) %>,
-      processing: <%- JSON.stringify(analytics.statusCounts.Processing || 0) %>,
-      delivered: <%- JSON.stringify(analytics.statusCounts.Delivered || 0) %>
+      placed: <%- JSON.stringify(charts.statusCounts.Placed || 0) %>,
+      processing: <%- JSON.stringify(charts.statusCounts.Processing || 0) %>,
+      delivered: <%- JSON.stringify(charts.statusCounts.Delivered || 0) %>
     },
     topSelling: {
       labels: <%- JSON.stringify(topSelling.map(row => row.name)) %>,

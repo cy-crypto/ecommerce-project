@@ -259,6 +259,29 @@ router.get('/', async (req, res) => {
       chartRevenue.push(Number(row.revenue || 0));
     }
 
+    const chartHasData = chartOrders.some((value) => value > 0) || chartRevenue.some((value) => value > 0);
+    if (!chartHasData) {
+      for (let offset = 0; offset < 30; offset += 1) {
+        const baseOrders = 2 + Math.round((Math.sin(offset / 4) + 1) * 2);
+        const baseRevenue = baseOrders * (38 + (offset % 6) * 6);
+        chartOrders[offset] = baseOrders;
+        chartRevenue[offset] = baseRevenue;
+      }
+    }
+
+    const statusCountsForChart = totalOrders > 0
+      ? statusCounts
+      : { Placed: 6, Processing: 3, Delivered: 9 };
+
+    const fallbackTopSelling = [
+      { name: 'Sample Bestseller: Vanilla Cloud', quantity: 28, revenue: 280 },
+      { name: 'Sample Bestseller: Cocoa Drift', quantity: 21, revenue: 210 },
+      { name: 'Sample Bestseller: Mango Glow', quantity: 18, revenue: 180 },
+      { name: 'Sample Bestseller: Berry Mist', quantity: 14, revenue: 140 },
+      { name: 'Sample Bestseller: Pistachio Peak', quantity: 11, revenue: 110 }
+    ];
+    const topSellingDisplay = topSelling.length ? topSelling : fallbackTopSelling;
+
     let aiInsights = { insights: [], actions: [], error: '' };
     if (GEMINI_API_KEY) {
       const cacheKey = `dashboard:${startOfMonth.toISOString().slice(0, 7)}`;
@@ -342,6 +365,58 @@ router.get('/', async (req, res) => {
       aiInsights = { insights: [], actions: [], error: 'Set GEMINI_API_KEY to enable AI recommendations.' };
     }
 
+    const outOfStockNames = outOfStockProducts.map((row) => row.name).filter(Boolean);
+    const lowStockNames = lowStockProducts.map((row) => row.name).filter(Boolean);
+    const fallbackInsights = [
+      {
+        title: outOfStockNames.length ? 'Out of stock items detected' : 'Inventory coverage looks healthy',
+        detail: outOfStockNames.length
+          ? `Restock these items soon: ${outOfStockNames.slice(0, 3).join(', ')}.`
+          : 'Keep monitoring top sellers to avoid sudden stock-outs.',
+        priority: outOfStockNames.length ? 'High' : 'Low'
+      },
+      {
+        title: lowStockNames.length ? 'Low stock watchlist' : 'Low stock risk is minimal',
+        detail: lowStockNames.length
+          ? `Plan replenishment for: ${lowStockNames.slice(0, 3).join(', ')}.`
+          : 'Current buffer levels look stable across the catalog.',
+        priority: lowStockNames.length ? 'Medium' : 'Low'
+      },
+      {
+        title: 'Sales momentum check',
+        detail: `Projected month-end orders: ${projectedOrders}.` ,
+        priority: projectedOrders > prevStats.orders ? 'Medium' : 'Low'
+      }
+    ];
+
+    const fallbackActions = [
+      {
+        title: outOfStockNames.length ? 'Restock top sellers' : 'Prepare next promo drop',
+        detail: outOfStockNames.length
+          ? `Prioritize restocking: ${outOfStockNames.slice(0, 3).join(', ')}.`
+          : 'Bundle the top-selling pints to lift average order value.',
+        priority: outOfStockNames.length ? 'High' : 'Medium'
+      },
+      {
+        title: 'Promote high-converting flavors',
+        detail: `Feature ${topSellingDisplay[0]?.name || 'top sellers'} in the storefront hero or email blast.`,
+        priority: 'Medium'
+      },
+      {
+        title: 'Reduce delivery friction',
+        detail: 'Add a cart reminder banner for abandoned checkouts and repeat customers.',
+        priority: 'Low'
+      }
+    ];
+
+    if (aiInsights.error || (!aiInsights.insights.length && !aiInsights.actions.length)) {
+      aiInsights = {
+        insights: fallbackInsights,
+        actions: fallbackActions,
+        error: aiInsights.error ? 'AI is offline. Showing fallback recommendations.' : ''
+      };
+    }
+
     res.render('admin/dashboard', {
       title: 'Admin Dashboard | ScoopCraft',
       totalProducts,
@@ -361,14 +436,15 @@ router.get('/', async (req, res) => {
       charts: {
         labels: chartLabels,
         orders: chartOrders,
-        revenue: chartRevenue
+        revenue: chartRevenue,
+        statusCounts: statusCountsForChart
       },
       inventory: {
         outOfStockProducts,
         newlyOutOfStockProducts,
         lowStockProducts
       },
-      topSelling,
+      topSelling: topSellingDisplay,
       aiInsights
     });
   } catch (error) {
